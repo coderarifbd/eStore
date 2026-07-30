@@ -23,6 +23,18 @@ const AppContent = ({ currentUser, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isBackupOpen, setIsBackupOpen] = useState(false);
 
+  // Global Keyboard Shortcuts (F1=Dashboard, F2=POS, F4=Purchases, F8=Inventory)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'F1') { e.preventDefault(); setActiveTab('dashboard'); }
+      if (e.key === 'F2') { e.preventDefault(); setActiveTab('pos'); }
+      if (e.key === 'F4') { e.preventDefault(); setActiveTab('purchases'); }
+      if (e.key === 'F8') { e.preventDefault(); setActiveTab('inventory'); }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Tab Title helper
   const getTabTitle = () => {
     switch (activeTab) {

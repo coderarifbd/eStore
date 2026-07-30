@@ -8,11 +8,10 @@ import {
   Coins, 
   Package, 
   ArrowUpRight, 
-  ArrowDownRight,
-  PlusCircle,
   FileText,
   Printer,
-  ShieldCheck
+  ShieldCheck,
+  Building2
 } from 'lucide-react';
 
 export const Dashboard = ({ setActiveTab }) => {
@@ -21,7 +20,6 @@ export const Dashboard = ({ setActiveTab }) => {
     sales, 
     expenses, 
     salaryTx, 
-    products, 
     suppliers, 
     getFlatVariants,
     setPrintDoc
@@ -71,35 +69,46 @@ export const Dashboard = ({ setActiveTab }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
-      {/* Quick Action Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.15))',
-        border: '1px solid rgba(6, 182, 212, 0.3)',
-        borderRadius: '12px',
-        padding: '1.25rem',
+      {/* Executive Quick Banner */}
+      <div className="card" style={{
+        backgroundColor: '#111827',
+        border: '1px solid #26334d',
+        padding: '1.25rem 1.5rem',
         display: 'flex',
-        justifyContent: 'space-between',
+        justify: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: '1rem'
       }}>
-        <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.2rem' }}>
-            {isBn ? 'স্বাগতম! ইলেকট্রিক্যাল শপ ম্যানেজমেন্টের ড্যাশবোর্ডে' : 'Welcome to Electrical Store Dashboard'}
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: '#94a3b8' }}>
-            {isBn ? 'সহজেই দোকান ক্রয়, বিক্রয়, ভাউচার, স্টক এবং লাভ-ক্ষতির হিসাব রাখুন' : 'Real-time overview of sales, stock valuation, dues and net profit'}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{
+            width: '42px', height: '42px',
+            borderRadius: '8px',
+            backgroundColor: '#1f2937',
+            border: '1px solid #374151',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#3b82f6'
+          }}>
+            <Building2 size={22} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#f3f4f6', marginBottom: '0.15rem' }}>
+              {isBn ? 'ফারদিন ইলেকট্রিক্যাল স্টোর — ড্যাশবোর্ড' : 'Fardin Electrical Store Dashboard'}
+            </h2>
+            <p style={{ fontSize: '0.85rem', color: '#9ca3af' }}>
+              {isBn ? 'দোকানের ক্রয়, বিক্রয়, স্টক এবং আর্থিক হিসাবের সারসংক্ষেপ' : 'Real-time overview of sales, stock valuation, dues and net profit'}
+            </p>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
-          <button onClick={() => setActiveTab('pos')} className="btn btn-primary btn-sm">
+          <button onClick={() => setActiveTab('pos')} className="btn btn-primary" style={{ padding: '0.55rem 1.15rem' }}>
             <ShoppingCart size={16} />
             <span>{isBn ? '+ নতুন বিক্রয় (POS)' : '+ New Sale'}</span>
           </button>
-          <button onClick={() => setActiveTab('purchases')} className="btn btn-secondary btn-sm">
-            <FileText size={16} color="#06b6d4" />
-            <span>{isBn ? '+ ক্রয় ভাউচার এন্ট্রি' : '+ Purchase Voucher'}</span>
+          <button onClick={() => setActiveTab('purchases')} className="btn btn-secondary" style={{ padding: '0.55rem 1.15rem' }}>
+            <FileText size={16} color="#3b82f6" />
+            <span>{isBn ? '+ ক্রয় ভাউচার' : '+ Purchase Voucher'}</span>
           </button>
         </div>
       </div>
@@ -111,91 +120,91 @@ export const Dashboard = ({ setActiveTab }) => {
         gap: '1rem'
       }}>
         {/* Today's Sales */}
-        <div className="card" style={{ borderLeft: '4px solid #06b6d4' }}>
+        <div className="card" style={{ borderLeft: '3px solid #3b82f6' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 }}>
+            <span style={{ fontSize: '0.825rem', color: '#9ca3af', fontWeight: 600 }}>
               {isBn ? 'আজকের বিক্রি' : "Today's Sales"}
             </span>
-            <div style={{ padding: '6px', borderRadius: '6px', background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }}>
+            <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
               <ShoppingCart size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>
+          <div style={{ fontSize: '1.45rem', fontWeight: 700, color: '#f3f4f6' }}>
             ৳{todayTotalSales.toLocaleString('en-BD')}
           </div>
-          <div style={{ fontSize: '0.775rem', color: '#10b981', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
-            <ArrowUpRight size={14} /> {isBn ? `আজকের লাভ: ৳${todayTotalProfit.toLocaleString('en-BD')}` : `Profit: ৳${todayTotalProfit}`}
+          <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '2px', fontWeight: 600 }}>
+            <ArrowUpRight size={13} /> {isBn ? `লাভ: ৳${todayTotalProfit.toLocaleString('en-BD')}` : `Profit: ৳${todayTotalProfit}`}
           </div>
         </div>
 
         {/* Monthly Net Profit */}
-        <div className="card" style={{ borderLeft: `4px solid ${monthlyNetProfit >= 0 ? '#10b981' : '#f43f5e'}` }}>
+        <div className="card" style={{ borderLeft: `3px solid ${monthlyNetProfit >= 0 ? '#10b981' : '#ef4444'}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 }}>
-              {isBn ? 'চলতি মাসের নিট লাভ/ক্ষতি' : 'Monthly Net Profit'}
+            <span style={{ fontSize: '0.825rem', color: '#9ca3af', fontWeight: 600 }}>
+              {isBn ? 'চলতি মাসের নিট লাভ' : 'Monthly Net Profit'}
             </span>
-            <div style={{ padding: '6px', borderRadius: '6px', background: monthlyNetProfit >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)', color: monthlyNetProfit >= 0 ? '#10b981' : '#f43f5e' }}>
+            <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: monthlyNetProfit >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: monthlyNetProfit >= 0 ? '#10b981' : '#ef4444' }}>
               <TrendingUp size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: monthlyNetProfit >= 0 ? '#10b981' : '#f43f5e' }}>
+          <div style={{ fontSize: '1.45rem', fontWeight: 700, color: monthlyNetProfit >= 0 ? '#34d399' : '#f87171' }}>
             ৳{monthlyNetProfit.toLocaleString('en-BD')}
           </div>
-          <div style={{ fontSize: '0.775rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
             {isBn ? `মোট বিক্রি: ৳${monthlySalesAmount.toLocaleString('en-BD')}` : `Total Sales: ৳${monthlySalesAmount}`}
           </div>
         </div>
 
         {/* Stock Valuation */}
-        <div className="card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+        <div className="card" style={{ borderLeft: '3px solid #8b5cf6' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 }}>
-              {isBn ? 'মোট স্টক বর্তমান মূল্য' : 'Stock Valuation'}
+            <span style={{ fontSize: '0.825rem', color: '#9ca3af', fontWeight: 600 }}>
+              {isBn ? 'স্টক বর্তমান মূল্য' : 'Stock Valuation'}
             </span>
-            <div style={{ padding: '6px', borderRadius: '6px', background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6' }}>
+            <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' }}>
               <Package size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc' }}>
+          <div style={{ fontSize: '1.45rem', fontWeight: 700, color: '#f3f4f6' }}>
             ৳{totalStockValue.toLocaleString('en-BD')}
           </div>
-          <div style={{ fontSize: '0.775rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-            {isBn ? `মোট আইটেম ভেরিয়েন্ট: ${flatVariants.length} টি` : `Total Variants: ${flatVariants.length}`}
+          <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+            {isBn ? `মোট ভেরিয়েন্ট: ${flatVariants.length} টি` : `Total Variants: ${flatVariants.length}`}
           </div>
         </div>
 
         {/* Customer Dues */}
-        <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
+        <div className="card" style={{ borderLeft: '3px solid #f59e0b' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 }}>
-              {isBn ? 'গ্রাহকের মোট বাকি (Due)' : 'Customer Dues'}
+            <span style={{ fontSize: '0.825rem', color: '#9ca3af', fontWeight: 600 }}>
+              {isBn ? 'গ্রাহকের মোট বাকি' : 'Customer Dues'}
             </span>
-            <div style={{ padding: '6px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
+            <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
               <Coins size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f59e0b' }}>
+          <div style={{ fontSize: '1.45rem', fontWeight: 700, color: '#fbbf24' }}>
             ৳{totalCustomerDue.toLocaleString('en-BD')}
           </div>
-          <div style={{ fontSize: '0.775rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
             {isBn ? 'বিক্রয় বাকি হিসেবে জমা' : 'Receivables from sales'}
           </div>
         </div>
 
         {/* Supplier Dues */}
-        <div className="card" style={{ borderLeft: '4px solid #f43f5e' }}>
+        <div className="card" style={{ borderLeft: '3px solid #ef4444' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 }}>
-              {isBn ? 'সাপ্লায়ার পাওনা (পাওনাদার)' : 'Supplier Payables'}
+            <span style={{ fontSize: '0.825rem', color: '#9ca3af', fontWeight: 600 }}>
+              {isBn ? 'সাপ্লায়ার পাওনাদার' : 'Supplier Payables'}
             </span>
-            <div style={{ padding: '6px', borderRadius: '6px', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e' }}>
+            <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
               <Wallet size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f43f5e' }}>
+          <div style={{ fontSize: '1.45rem', fontWeight: 700, color: '#f87171' }}>
             ৳{totalSupplierDue.toLocaleString('en-BD')}
           </div>
-          <div style={{ fontSize: '0.775rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
             {isBn ? 'মহাজনের পাওনা পরিশোধযোগ্য' : 'Payables to suppliers'}
           </div>
         </div>
@@ -205,13 +214,13 @@ export const Dashboard = ({ setActiveTab }) => {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-        gap: '1.5rem'
+        gap: '1.25rem'
       }}>
         {/* Low Stock Alert Box */}
         <div className="card">
           <div className="card-title" style={{ color: '#f59e0b' }}>
-            <AlertTriangle size={20} />
-            <span>{isBn ? 'কম স্টক অ্যালার্ট (Reorder Warning)' : 'Low Stock Warning'}</span>
+            <AlertTriangle size={18} />
+            <span>{isBn ? 'কম স্টক অ্যালার্ট' : 'Low Stock Warning'}</span>
             <span className="badge badge-amber" style={{ marginLeft: 'auto' }}>
               {lowStockItems.length} {isBn ? 'টি পণ্য' : 'Items'}
             </span>
@@ -221,19 +230,19 @@ export const Dashboard = ({ setActiveTab }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               {lowStockItems.map(item => (
                 <div key={`${item.productId}_${item.variantId}`} style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#0f172a',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  padding: '0.75rem 0.9rem',
+                  backgroundColor: '#0b0f19',
+                  border: '1px solid #26334d',
                   borderRadius: '8px',
                   display: 'flex',
-                  justifyContent: 'space-between',
+                  justify: 'space-between',
                   alignItems: 'center'
                 }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f8fafc' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#f3f4f6' }}>
                       {isBn ? item.productNameBn : item.productNameEn}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#06b6d4' }}>
+                    <div style={{ fontSize: '0.775rem', color: '#60a5fa', marginTop: '2px' }}>
                       {item.brand} • <strong>{item.spec}</strong>
                     </div>
                   </div>
@@ -242,25 +251,25 @@ export const Dashboard = ({ setActiveTab }) => {
                     <div className="badge badge-rose">
                       {isBn ? `স্টক: ${item.stock} ${item.unit}` : `Stock: ${item.stock}`}
                     </div>
-                    <div style={{ fontSize: '0.725rem', color: '#94a3b8', marginTop: '3px' }}>
-                      {isBn ? `সর্বনিম্ন রি-অর্ডার: ${item.reorderLevel}` : `Reorder: ${item.reorderLevel}`}
+                    <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '3px' }}>
+                      {isBn ? `রি-অর্ডার: ${item.reorderLevel}` : `Reorder: ${item.reorderLevel}`}
                     </div>
                   </div>
                 </div>
               ))}
               <button 
                 onClick={() => setActiveTab('purchases')}
-                className="btn btn-amber btn-sm" 
-                style={{ marginTop: '0.5rem', width: '100%' }}
+                className="btn btn-secondary btn-sm" 
+                style={{ marginTop: '0.5rem', width: '100%', borderColor: '#f59e0b', color: '#fbbf24' }}
               >
                 <FileText size={15} />
                 <span>{isBn ? 'নতুন ক্রয় ভাউচার এন্ট্রি করুন' : 'Create Purchase Voucher'}</span>
               </button>
             </div>
           ) : (
-            <div style={{ padding: '1.5rem', textAlign: 'center', color: '#10b981' }}>
-              <ShieldCheck size={36} style={{ margin: '0 auto 0.5rem auto' }} />
-              <p style={{ fontWeight: 600 }}>{isBn ? 'সকল পণ্যের পর্যাপ্ত স্টক রয়েছে!' : 'All items have sufficient stock!'}</p>
+            <div style={{ padding: '1.75rem', textAlign: 'center', color: '#10b981' }}>
+              <ShieldCheck size={38} style={{ margin: '0 auto 0.5rem auto' }} />
+              <p style={{ fontWeight: 600, fontSize: '0.925rem' }}>{isBn ? 'সকল পণ্যের পর্যাপ্ত স্টক রয়েছে!' : 'All items have sufficient stock!'}</p>
             </div>
           )}
         </div>
@@ -268,7 +277,7 @@ export const Dashboard = ({ setActiveTab }) => {
         {/* Recent Sales List */}
         <div className="card">
           <div className="card-title">
-            <ShoppingCart size={20} color="#06b6d4" />
+            <ShoppingCart size={18} color="#3b82f6" />
             <span>{isBn ? 'সর্বশেষ বিক্রয় মেমোসমূহ' : 'Recent Sales Transactions'}</span>
             <button onClick={() => setActiveTab('pos')} className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto' }}>
               {isBn ? 'সবগুলো দেখুন' : 'View All'}
@@ -289,10 +298,10 @@ export const Dashboard = ({ setActiveTab }) => {
               <tbody>
                 {sales.slice(0, 5).map(sale => (
                   <tr key={sale.id}>
-                    <td style={{ fontWeight: 600, color: '#06b6d4' }}>{sale.id}</td>
+                    <td style={{ fontWeight: 600, color: '#60a5fa' }}>{sale.id}</td>
                     <td>
-                      <div>{sale.customerName || (isBn ? 'সাধারণ গ্রাহক' : 'Walk-in Customer')}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{sale.date}</div>
+                      <div style={{ fontWeight: 500 }}>{sale.customerName || (isBn ? 'সাধারণ গ্রাহক' : 'Walk-in Customer')}</div>
+                      <div style={{ fontSize: '0.725rem', color: '#6b7280' }}>{sale.date}</div>
                     </td>
                     <td style={{ fontWeight: 700 }}>৳{sale.grandTotal}</td>
                     <td>
@@ -308,7 +317,7 @@ export const Dashboard = ({ setActiveTab }) => {
                         className="btn btn-secondary btn-sm"
                         title="ক্যাশ মেমো প্রিন্ট করুন"
                       >
-                        <Printer size={14} />
+                        <Printer size={13} />
                       </button>
                     </td>
                   </tr>
