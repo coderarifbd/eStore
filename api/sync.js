@@ -1,137 +1,33 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
 import postgres from 'postgres';
 
-dotenv.config();
-
-const app = express();
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-
 const DATABASE_URL = process.env.DATABASE_URL;
+
 let sql = null;
 if (DATABASE_URL) {
   sql = postgres(DATABASE_URL, { ssl: 'require' });
-} else {
-  console.warn("DATABASE_URL environment variable is missing!");
 }
 
-// GET /api/data: Load all initial data from Postgres database
-app.get('/api/data', async (req, res) => {
+export default async function handler(req, res) {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
   if (!sql) {
-    return res.status(500).json({ error: "Database URL is not configured. Please set the DATABASE_URL environment variable." });
+    return res.status(500).json({ error: 'DATABASE_URL is not set in environment variables.' });
   }
-  try {
-    const productsRaw = await sql`SELECT * FROM products`;
-    const salesRaw = await sql`SELECT * FROM sales ORDER BY date DESC`;
-    const expensesRaw = await sql`SELECT * FROM expenses ORDER BY date DESC`;
-    const suppliersRaw = await sql`SELECT * FROM suppliers`;
-    const salaryTxRaw = await sql`SELECT * FROM salary_tx ORDER BY date DESC`;
-    const employeesRaw = await sql`SELECT * FROM employees`;
-    const purchasesRaw = await sql`SELECT * FROM purchases ORDER BY date DESC`;
 
-    // Map database naming (snake_case) to client-side naming (camelCase)
-    const products = productsRaw.map(p => ({
-      id: p.id,
-      nameBn: p.name_bn,
-      nameEn: p.name_en,
-      category: p.category,
-      brand: p.brand,
-      spec: p.spec,
-      stock: p.stock,
-      batches: p.batches || []
-    }));
-
-    const sales = salesRaw.map(s => ({
-      id: s.id,
-      date: s.date.toISOString(),
-      customerName: s.customer_name,
-      customerPhone: s.customer_phone,
-      customerAddress: s.customer_address,
-      items: s.items || [],
-      subTotal: Number(s.sub_total),
-      discount: Number(s.discount),
-      grandTotal: Number(s.grand_total),
-      paidAmount: Number(s.paid_amount),
-      dueAmount: Number(s.due_amount),
-      totalCostPrice: Number(s.total_cost_price)
-    }));
-
-    const expenses = expensesRaw.map(e => ({
-      id: e.id,
-      category: e.category,
-      amount: Number(e.amount),
-      date: e.date instanceof Date ? e.date.toISOString().split('T')[0] : e.date,
-      notes: e.notes,
-      paidBy: e.paid_by
-    }));
-
-    const suppliers = suppliersRaw.map(sup => ({
-      id: sup.id,
-      name: sup.name,
-      phone: sup.phone,
-      address: sup.address,
-      balanceDue: Number(sup.balance_due)
-    }));
-
-    const salaryTx = salaryTxRaw.map(st => ({
-      id: st.id,
-      employeeId: st.employee_id,
-      employeeName: st.employee_name,
-      monthYear: st.month_year,
-      type: st.type,
-      amount: Number(st.amount),
-      date: st.date instanceof Date ? st.date.toISOString().split('T')[0] : st.date,
-      notes: st.notes
-    }));
-
-    const employees = employeesRaw.map(emp => ({
-      id: emp.id,
-      name: emp.name,
-      phone: emp.phone,
-      designation: emp.designation,
-      monthlySalary: Number(emp.monthly_salary),
-      status: emp.status,
-      joinDate: emp.join_date instanceof Date ? emp.join_date.toISOString().split('T')[0] : emp.join_date
-    }));
-
-    const purchases = purchasesRaw.map(pur => ({
-      id: pur.id,
-      date: pur.date instanceof Date ? pur.date.toISOString().split('T')[0] : pur.date,
-      supplierId: pur.supplier_id,
-      supplierName: pur.supplier_name,
-      items: pur.items || [],
-      grandTotal: Number(pur.grand_total),
-      paidAmount: Number(pur.paid_amount),
-      dueAmount: Number(pur.due_amount)
-    }));
-
-    res.json({
-      products,
-      sales,
-      expenses,
-      suppliers,
-      salaryTx,
-      employees,
-      purchases
-    });
-  } catch (error) {
-    console.error("Error loading database records:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// POST /api/sync: Universal sync endpoint to save updated state and delete removed records
-app.post('/api/sync', async (req, res) => {
   const { products, sales, expenses, suppliers, salaryTx, employees, purchases } = req.body;
 
   try {
     // 1. Sync products
-    if (products) {
+    if (products !== undefined) {
       if (products.length > 0) {
         const ids = products.map(p => p.id);
-        await sql`DELETE FROM products WHERE id NOT IN (${ids})`;
+        await sql`DELETE FROM products WHERE id != ALL(${ids})`;
         for (let p of products) {
           await sql`
             INSERT INTO products (id, name_bn, name_en, category, brand, spec, stock, batches)
@@ -143,7 +39,7 @@ app.post('/api/sync', async (req, res) => {
               brand = EXCLUDED.brand,
               spec = EXCLUDED.spec,
               stock = EXCLUDED.stock,
-              batches = EXCLUDED.batches;
+              batches = EXCLUDED.batches
           `;
         }
       } else {
@@ -152,10 +48,10 @@ app.post('/api/sync', async (req, res) => {
     }
 
     // 2. Sync sales
-    if (sales) {
+    if (sales !== undefined) {
       if (sales.length > 0) {
         const ids = sales.map(s => s.id);
-        await sql`DELETE FROM sales WHERE id NOT IN (${ids})`;
+        await sql`DELETE FROM sales WHERE id != ALL(${ids})`;
         for (let s of sales) {
           await sql`
             INSERT INTO sales (id, date, customer_name, customer_phone, customer_address, items, sub_total, discount, grand_total, paid_amount, due_amount, total_cost_price)
@@ -170,7 +66,7 @@ app.post('/api/sync', async (req, res) => {
               grand_total = EXCLUDED.grand_total,
               paid_amount = EXCLUDED.paid_amount,
               due_amount = EXCLUDED.due_amount,
-              total_cost_price = EXCLUDED.total_cost_price;
+              total_cost_price = EXCLUDED.total_cost_price
           `;
         }
       } else {
@@ -179,10 +75,10 @@ app.post('/api/sync', async (req, res) => {
     }
 
     // 3. Sync expenses
-    if (expenses) {
+    if (expenses !== undefined) {
       if (expenses.length > 0) {
         const ids = expenses.map(e => e.id);
-        await sql`DELETE FROM expenses WHERE id NOT IN (${ids})`;
+        await sql`DELETE FROM expenses WHERE id != ALL(${ids})`;
         for (let e of expenses) {
           await sql`
             INSERT INTO expenses (id, category, amount, date, notes, paid_by)
@@ -192,7 +88,7 @@ app.post('/api/sync', async (req, res) => {
               amount = EXCLUDED.amount,
               date = EXCLUDED.date,
               notes = EXCLUDED.notes,
-              paid_by = EXCLUDED.paid_by;
+              paid_by = EXCLUDED.paid_by
           `;
         }
       } else {
@@ -201,10 +97,10 @@ app.post('/api/sync', async (req, res) => {
     }
 
     // 4. Sync suppliers
-    if (suppliers) {
+    if (suppliers !== undefined) {
       if (suppliers.length > 0) {
-        const ids = suppliers.map(sup => sup.id);
-        await sql`DELETE FROM suppliers WHERE id NOT IN (${ids})`;
+        const ids = suppliers.map(s => s.id);
+        await sql`DELETE FROM suppliers WHERE id != ALL(${ids})`;
         for (let sup of suppliers) {
           await sql`
             INSERT INTO suppliers (id, name, phone, address, balance_due)
@@ -213,7 +109,7 @@ app.post('/api/sync', async (req, res) => {
               name = EXCLUDED.name,
               phone = EXCLUDED.phone,
               address = EXCLUDED.address,
-              balance_due = EXCLUDED.balance_due;
+              balance_due = EXCLUDED.balance_due
           `;
         }
       } else {
@@ -222,10 +118,10 @@ app.post('/api/sync', async (req, res) => {
     }
 
     // 5. Sync salary transactions
-    if (salaryTx) {
+    if (salaryTx !== undefined) {
       if (salaryTx.length > 0) {
-        const ids = salaryTx.map(st => st.id);
-        await sql`DELETE FROM salary_tx WHERE id NOT IN (${ids})`;
+        const ids = salaryTx.map(s => s.id);
+        await sql`DELETE FROM salary_tx WHERE id != ALL(${ids})`;
         for (let st of salaryTx) {
           await sql`
             INSERT INTO salary_tx (id, employee_id, employee_name, month_year, type, amount, date, notes)
@@ -237,7 +133,7 @@ app.post('/api/sync', async (req, res) => {
               type = EXCLUDED.type,
               amount = EXCLUDED.amount,
               date = EXCLUDED.date,
-              notes = EXCLUDED.notes;
+              notes = EXCLUDED.notes
           `;
         }
       } else {
@@ -246,10 +142,10 @@ app.post('/api/sync', async (req, res) => {
     }
 
     // 6. Sync employees
-    if (employees) {
+    if (employees !== undefined) {
       if (employees.length > 0) {
-        const ids = employees.map(emp => emp.id);
-        await sql`DELETE FROM employees WHERE id NOT IN (${ids})`;
+        const ids = employees.map(e => e.id);
+        await sql`DELETE FROM employees WHERE id != ALL(${ids})`;
         for (let emp of employees) {
           await sql`
             INSERT INTO employees (id, name, phone, designation, monthly_salary, status, join_date)
@@ -260,7 +156,7 @@ app.post('/api/sync', async (req, res) => {
               designation = EXCLUDED.designation,
               monthly_salary = EXCLUDED.monthly_salary,
               status = EXCLUDED.status,
-              join_date = EXCLUDED.join_date;
+              join_date = EXCLUDED.join_date
           `;
         }
       } else {
@@ -269,10 +165,10 @@ app.post('/api/sync', async (req, res) => {
     }
 
     // 7. Sync purchases
-    if (purchases) {
+    if (purchases !== undefined) {
       if (purchases.length > 0) {
-        const ids = purchases.map(pur => pur.id);
-        await sql`DELETE FROM purchases WHERE id NOT IN (${ids})`;
+        const ids = purchases.map(p => p.id);
+        await sql`DELETE FROM purchases WHERE id != ALL(${ids})`;
         for (let pur of purchases) {
           await sql`
             INSERT INTO purchases (id, date, supplier_id, supplier_name, items, grand_total, paid_amount, due_amount)
@@ -284,7 +180,7 @@ app.post('/api/sync', async (req, res) => {
               items = EXCLUDED.items,
               grand_total = EXCLUDED.grand_total,
               paid_amount = EXCLUDED.paid_amount,
-              due_amount = EXCLUDED.due_amount;
+              due_amount = EXCLUDED.due_amount
           `;
         }
       } else {
@@ -292,17 +188,9 @@ app.post('/api/sync', async (req, res) => {
       }
     }
 
-    res.json({ success: true });
+    return res.status(200).json({ success: true });
   } catch (error) {
-    console.error("Sync database tables error:", error);
-    res.status(500).json({ error: error.message });
+    console.error('Sync error:', error);
+    return res.status(500).json({ error: error.message });
   }
-});
-
-// For local running
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Serverless API backend running on http://localhost:${PORT}`);
-});
-
-export default app;
+}

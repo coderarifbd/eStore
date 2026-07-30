@@ -154,18 +154,19 @@ export const StoreProvider = ({ children }) => {
         const response = await fetch('/api/data');
         if (response.ok) {
           const data = await response.json();
-          if (data) {
-            if (data.products) setProducts(data.products);
-            if (data.suppliers) setSuppliers(data.suppliers);
-            if (data.sales) setSales(data.sales);
-            if (data.purchases) setPurchases(data.purchases);
-            if (data.expenses) setExpenses(data.expenses);
-            if (data.employees) setEmployees(data.employees);
-            if (data.salaryTx) setSalaryTx(data.salaryTx);
+          if (data && !data.error) {
+            // Always load whatever is in the DB (even if empty arrays)
+            if (Array.isArray(data.products)) setProducts(data.products);
+            if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
+            if (Array.isArray(data.sales)) setSales(data.sales);
+            if (Array.isArray(data.purchases)) setPurchases(data.purchases);
+            if (Array.isArray(data.expenses)) setExpenses(data.expenses);
+            if (Array.isArray(data.employees)) setEmployees(data.employees);
+            if (Array.isArray(data.salaryTx)) setSalaryTx(data.salaryTx);
           }
         }
       } catch (err) {
-        console.warn("Neon Database not available. Running with local storage cache fallback.", err);
+        console.warn("DB unavailable, using local cache:", err);
       } finally {
         setIsLoaded(true);
       }
