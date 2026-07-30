@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ফারদিন ইলেক্ট্রিক্যাল স্টোর</string>
+    <string name="title_activity_main">ফারদিন ইলেক্ট্রিক্যাল স্টোর</string>
+    <string name="package_name">com.fardinelectrical.estore</string>
+    <string name="custom_url_scheme">com.fardinelectrical.estore</string>
+</resources>
