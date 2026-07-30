@@ -14,6 +14,7 @@ import { Reports } from './components/Reports';
 import { UserManagement } from './components/UserManagement';
 import { PrintInvoiceModal } from './components/PrintInvoiceModal';
 import { BackupModal } from './components/BackupModal';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { LayoutDashboard, ShoppingCart, FileText, Package, FolderPlus, Tag, Receipt, Users, TrendingUp, UserCog } from 'lucide-react';
 
 const AppContent = ({ currentUser, onLogout }) => {
@@ -134,6 +135,15 @@ const AppContent = ({ currentUser, onLogout }) => {
 
       {/* Backup & Restore Modal */}
       <BackupModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />
+
+      {/* Android Mobile Bottom Nav */}
+      <MobileBottomNav 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onOpenBackup={() => setIsBackupOpen(true)}
+        currentUser={currentUser}
+        onLogout={onLogout}
+      />
 
     </div>
   );
