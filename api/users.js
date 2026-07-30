@@ -1,11 +1,7 @@
 import postgres from 'postgres';
-import { verifyToken, getTokenFromRequest, hashPassword } from './auth-utils.js';
+import { verifyToken, getTokenFromRequest, hashPassword, getDbUrl } from './auth-utils.js';
 
-const DATABASE_URL = process.env.DATABASE_URL;
-let sql = null;
-if (DATABASE_URL) {
-  sql = postgres(DATABASE_URL, { ssl: 'require', max: 1 });
-}
+const sql = postgres(getDbUrl(), { ssl: 'require', max: 1 });
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,10 +9,6 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-
-  if (!sql) {
-    return res.status(500).json({ error: 'DATABASE_URL is not configured.' });
-  }
 
   // Verify token
   const token = getTokenFromRequest(req);
