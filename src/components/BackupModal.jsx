@@ -3,7 +3,7 @@ import { useStore } from '../context/StoreContext';
 import { Download, Upload, Database, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export const BackupModal = ({ isOpen, onClose }) => {
-  const { lang, exportDataJSON, importDataJSON } = useStore();
+  const { lang, exportDataJSON, importDataJSON, clearAllData } = useStore();
   const isBn = lang === 'bn';
 
   const [importText, setImportText] = useState('');
@@ -103,6 +103,33 @@ export const BackupModal = ({ isOpen, onClose }) => {
                 {statusMsg.text}
               </div>
             )}
+          </div>
+
+          {/* Section 3: Reset / Wipe database */}
+          <div style={{ padding: '1rem', backgroundColor: '#1e1b4b', borderRadius: '8px', border: '1px solid #dc2626' }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.35rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <AlertTriangle size={16} />
+              <span>৩. ডাটাবেজ ও ডেমো ডাটা রিসেট (Wipe & Reset Database)</span>
+            </h4>
+            <p style={{ fontSize: '0.825rem', color: '#cbd5e1', marginBottom: '0.85rem' }}>
+              {isBn ? 'দোকানের সমস্ত ডেমো ডাটা এবং ডাটাবেস সম্পূর্ণ খালি করতে চান? এই কাজ করার পর ডাটা ফিরে পাওয়া যাবে না।' : 'Wipe all items and reset database to completely empty.'}
+            </p>
+            <button 
+              onClick={() => {
+                if (window.confirm(isBn ? 'আপনি কি নিশ্চিতভাবে সব ডেমো ডাটা মুছে ডাটাবেজটি সম্পূর্ণ খালি করতে চান?' : 'Are you sure you want to completely wipe all store data?')) {
+                  clearAllData();
+                  setStatusMsg({ type: 'success', text: isBn ? 'ডাটাবেজ সম্পূর্ণ রিসেট হয়েছে!' : 'Database wiped successfully!' });
+                  setTimeout(() => {
+                    onClose();
+                    setStatusMsg(null);
+                  }, 1500);
+                }
+              }} 
+              className="btn btn-danger btn-sm" 
+              style={{ width: '100%', backgroundColor: '#dc2626', color: '#fff' }}
+            >
+              <span>{isBn ? 'ডেমো ডাটা মুছুন ও ডাটাবেস খালি করুন' : 'Wipe All Data & Start Fresh'}</span>
+            </button>
           </div>
 
         </div>

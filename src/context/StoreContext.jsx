@@ -826,6 +826,19 @@ export const StoreProvider = ({ children }) => {
     localStorage.clear();
   };
 
+  const clearAllData = () => {
+    setProducts([]);
+    setCategories([]);
+    setBrands([]);
+    setSuppliers([]);
+    setSales([]);
+    setPurchases([]);
+    setExpenses([]);
+    setEmployees([]);
+    setSalaryTx([]);
+    localStorage.clear();
+  };
+
   const exportDataJSON = () => {
     const data = {
       products, categories, brands, presets, suppliers, sales, purchases, expenses, employees, salaryTx,
@@ -892,6 +905,7 @@ export const StoreProvider = ({ children }) => {
       addSalaryTransaction,
       updateSupplierPayment,
       resetToDemoData,
+      clearAllData,
       exportDataJSON,
       importDataJSON,
       printDoc, setPrintDoc
