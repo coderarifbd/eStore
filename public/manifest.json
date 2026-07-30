@@ -1,22 +1,53 @@
 {
+  "id": "com.fardinelectrical.estore",
   "short_name": "eStore",
   "name": "ফারদিন ইলেক্ট্রিক্যাল স্টোর",
   "description": "ইলেকট্রিক্যাল শপ ইনভেন্টরি, ড্যাশবোর্ড ও পজ ম্যানেজমেন্ট সলুশন",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "/icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
+  "dir": "ltr",
+  "lang": "bn",
   "start_url": "/",
   "background_color": "#0b0f19",
   "theme_color": "#0b0f19",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "any",
+  "categories": ["business", "shopping", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "eStore App Screenshot"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "eStore App Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "বিক্রয় (POS)",
+      "short_name": "POS",
+      "description": "নতুন বিক্রয় ও ক্যাশ মেমো",
+      "url": "/?tab=pos",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
