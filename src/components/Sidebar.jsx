@@ -15,26 +15,35 @@ import {
   ChevronLeft,
   ChevronRight,
   Tag,
-  FolderPlus
+  FolderPlus,
+  UserCog,
+  LogOut,
+  ShieldCheck,
+  Shield
 } from 'lucide-react';
 
-export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup }) => {
+export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup, currentUser, onLogout }) => {
   const { lang, setLang, resetToDemoData } = useStore();
   const isBn = lang === 'bn';
+  const isAdmin = currentUser?.role === 'admin';
 
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const navItems = [
-    { id: 'dashboard', labelBn: 'ড্যাশবোর্ড', labelEn: 'Dashboard', icon: LayoutDashboard },
-    { id: 'pos', labelBn: 'বিক্রয় ও পজ (POS)', labelEn: 'POS Sales', icon: ShoppingCart },
-    { id: 'purchases', labelBn: 'ক্রয় ভাউচার', labelEn: 'Purchases', icon: FileText },
-    { id: 'inventory', labelBn: 'পণ্য ও স্টক', labelEn: 'Inventory', icon: Package },
-    { id: 'categories', labelBn: 'ক্যাটাগরি তালিকা', labelEn: 'Categories', icon: FolderPlus },
-    { id: 'brands', labelBn: 'ব্র্যান্ড তালিকা', labelEn: 'Brands List', icon: Tag },
-    { id: 'expenses', labelBn: 'দোকানের ব্যয়', labelEn: 'Expenses', icon: Receipt },
-    { id: 'employees', labelBn: 'কর্মচারী ও বেতন', labelEn: 'Payroll', icon: Users },
-    { id: 'reports', labelBn: 'লাভ-ক্ষতি ও রিপোর্ট', labelEn: 'Reports', icon: TrendingUp },
+  const allNavItems = [
+    { id: 'dashboard', labelBn: 'ড্যাশবোর্ড', labelEn: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'staff'] },
+    { id: 'pos', labelBn: 'বিক্রয় ও পজ (POS)', labelEn: 'POS Sales', icon: ShoppingCart, roles: ['admin', 'staff'] },
+    { id: 'purchases', labelBn: 'ক্রয় ভাউচার', labelEn: 'Purchases', icon: FileText, roles: ['admin', 'staff'] },
+    { id: 'inventory', labelBn: 'পণ্য ও স্টক', labelEn: 'Inventory', icon: Package, roles: ['admin', 'staff'] },
+    { id: 'categories', labelBn: 'ক্যাটাগরি তালিকা', labelEn: 'Categories', icon: FolderPlus, roles: ['admin'] },
+    { id: 'brands', labelBn: 'ব্র্যান্ড তালিকা', labelEn: 'Brands List', icon: Tag, roles: ['admin'] },
+    { id: 'expenses', labelBn: 'দোকানের ব্যয়', labelEn: 'Expenses', icon: Receipt, roles: ['admin'] },
+    { id: 'employees', labelBn: 'কর্মচারী ও বেতন', labelEn: 'Payroll', icon: Users, roles: ['admin'] },
+    { id: 'reports', labelBn: 'লাভ-ক্ষতি ও রিপোর্ট', labelEn: 'Reports', icon: TrendingUp, roles: ['admin'] },
+    { id: 'users', labelBn: 'ইউজার ম্যানেজমেন্ট', labelEn: 'User Management', icon: UserCog, roles: ['admin'] },
   ];
+
+  // Filter nav items by user role
+  const navItems = allNavItems.filter(item => item.roles.includes(currentUser?.role || 'staff'));
 
   return (
     <aside style={{
@@ -83,7 +92,7 @@ export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup }) => {
                   {isBn ? 'ফারদিন ইলেকট্রিক স্টোর' : 'Fardin Electrical Store'}
                 </h1>
                 <p style={{ fontSize: '0.725rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                  {isBn ? 'পুনট বাজার, কালাই, জয়পুরহাট' : 'Punot Bazar, Kalai, Joypurhat'}
+                  {isBn ? 'পুনট বাজার, কালাই, জয়পুরহাট' : 'Punot Bazar, Kalai, Joypurhat'}
                 </p>
               </div>
             )}
@@ -102,7 +111,7 @@ export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup }) => {
                 display: 'flex',
                 alignItems: 'center'
               }}
-              title="সাইডবার গুটিয়ে নিন"
+              title="সাইডবার গুটিয়ে নিন"
             >
               <ChevronLeft size={20} />
             </button>
@@ -177,6 +186,36 @@ export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup }) => {
         flexDirection: 'column',
         gap: '0.5rem'
       }}>
+        {/* Current User Info */}
+        {!isCollapsed && currentUser && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            padding: '0.6rem 0.75rem',
+            backgroundColor: 'rgba(6, 182, 212, 0.06)',
+            borderRadius: '8px',
+            marginBottom: '0.25rem'
+          }}>
+            <div style={{
+              width: '32px', height: '32px', minWidth: '32px',
+              borderRadius: '8px',
+              background: isAdmin ? 'linear-gradient(135deg, #06b6d4, #8b5cf6)' : 'rgba(100, 116, 139, 0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              {isAdmin ? <ShieldCheck size={16} color="#fff" /> : <Shield size={16} color="#94a3b8" />}
+            </div>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                {currentUser.name || currentUser.username}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                {isAdmin ? 'মালিক' : 'কর্মচারী'}
+              </div>
+            </div>
+          </div>
+        )}
+
         <button 
           onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')}
           className="btn btn-secondary btn-sm"
@@ -187,28 +226,30 @@ export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup }) => {
           {!isCollapsed && <span>{lang === 'bn' ? 'English' : 'বাংলা'}</span>}
         </button>
 
-        <button 
-          onClick={onOpenBackup}
-          className="btn btn-secondary btn-sm"
-          style={{ width: '100%', justifyContent: isCollapsed ? 'center' : 'flex-start' }}
-          title="ডাটা ব্যাকআপ"
-        >
-          <Database size={16} color="#8b5cf6" />
-          {!isCollapsed && <span>{isBn ? 'ব্যাকআপ' : 'Backup'}</span>}
-        </button>
+        {isAdmin && (
+          <button 
+            onClick={onOpenBackup}
+            className="btn btn-secondary btn-sm"
+            style={{ width: '100%', justifyContent: isCollapsed ? 'center' : 'flex-start' }}
+            title="ডাটা ব্যাকআপ"
+          >
+            <Database size={16} color="#8b5cf6" />
+            {!isCollapsed && <span>{isBn ? 'ব্যাকআপ' : 'Backup'}</span>}
+          </button>
+        )}
 
         <button 
           onClick={() => {
-            if (window.confirm(isBn ? 'আপনি কি নিশ্চিত যে টেস্ট ডাটা রিসেট করতে চান?' : 'Reset demo data?')) {
-              resetToDemoData();
+            if (window.confirm(isBn ? 'আপনি কি লগআউট করতে চান?' : 'Do you want to logout?')) {
+              onLogout?.();
             }
           }}
           className="btn btn-secondary btn-sm"
           style={{ width: '100%', justifyContent: isCollapsed ? 'center' : 'flex-start', color: '#f43f5e' }}
-          title="ডেমো ডাটায় রিসেট"
+          title="লগআউট"
         >
-          <RotateCcw size={16} />
-          {!isCollapsed && <span>{isBn ? 'রিসেট' : 'Reset'}</span>}
+          <LogOut size={16} />
+          {!isCollapsed && <span>{isBn ? 'লগআউট' : 'Logout'}</span>}
         </button>
       </div>
 

@@ -214,7 +214,7 @@ export const Inventory = () => {
       p.nameEn.toLowerCase().includes(q) ||
       p.brand.toLowerCase().includes(q) ||
       (p.variationTypeName && p.variationTypeName.toLowerCase().includes(q)) ||
-      p.variants.some(v => 
+      (p.variants || []).some(v => 
         v.spec.toLowerCase().includes(q) || 
         v.sku.toLowerCase().includes(q)
       )
@@ -271,10 +271,10 @@ export const Inventory = () => {
     setProdUnit(prod.unit || 'Goj');
     
     setVariationGroups([
-      { id: 1, name: prod.variationTypeName || (isBn ? 'ভেরিয়েশন টাইপ' : 'Variation Type'), values: prod.variants.map(v => v.spec).join(', ') }
+      { id: 1, name: prod.variationTypeName || (isBn ? 'ভেরিয়শন টাইপ' : 'Variation Type'), values: (prod.variants || []).map(v => v.spec).join(', ') }
     ]);
     
-    setVariationOptions(prod.variants.map(v => ({
+    setVariationOptions((prod.variants || []).map(v => ({
       id: v.id,
       spec: v.spec,
       purchasePrice: v.purchasePrice,
@@ -478,7 +478,7 @@ export const Inventory = () => {
           filteredProducts.map(prod => {
             const cat = categories.find(c => c.id === prod.categoryId);
             const isExpanded = viewDensity === 'expanded' || !!expandedProductIds[prod.id];
-            const totalStock = prod.variants.reduce((sum, v) => sum + v.stock, 0);
+            const totalStock = (prod.variants || []).reduce((sum, v) => sum + v.stock, 0);
 
             return (
               <div 
@@ -521,7 +521,7 @@ export const Inventory = () => {
                       </span>
 
                       <span className="badge badge-cyan" style={{ fontSize: '0.75rem', padding: '1px 6px' }}>
-                        {prod.variants.length} {isBn ? 'টি ভেরিয়েন্ট' : 'Variants'}
+                        {(prod.variants || []).length} {isBn ? 'টি ভেরিয়েন্ট' : 'Variants'}
                       </span>
 
                       <span className="badge badge-green" style={{ fontSize: '0.75rem', padding: '1px 6px' }}>
@@ -607,7 +607,7 @@ export const Inventory = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {prod.variants.map(varItem => {
+                        {(prod.variants || []).map(varItem => {
                           const isLow = varItem.stock <= varItem.reorderLevel;
                           return (
                             <tr key={varItem.id}>
@@ -674,7 +674,7 @@ export const Inventory = () => {
                                   >
                                     <Edit3 size={14} />
                                   </button>
-                                  {prod.variants.length > 1 && (
+                                  {(prod.variants || []).length > 1 && (
                                     <button
                                       onClick={() => {
                                         if (window.confirm(isBn ? 'এই ভেরিয়েন্ট অপশনটি মুছে ফেলতে চান?' : 'Delete variant?')) {

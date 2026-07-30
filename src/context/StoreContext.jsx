@@ -71,33 +71,49 @@ export const INITIAL_PRESETS = [
   }
 ];
 
-export const StoreProvider = ({ children }) => {
+export const StoreProvider = ({ children, authToken, onAuthError }) => {
   const [lang, setLang] = useState(() => localStorage.getItem('elec_lang') || 'bn');
 
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('elec_products');
-    const loadedProducts = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-    return loadedProducts.map(p => ({
-      ...p,
-      variants: p.variants.map(v => {
-        if (!v.batches || v.batches.length === 0) {
-          return {
-            ...v,
-            batches: [{
-              id: `b_init_${v.id}`,
-              purchaseVoucherId: 'initial',
-              quantity: v.stock || 0,
-              remainingQuantity: v.stock || 0,
-              purchasePrice: v.purchasePrice || 0,
-              sellingPrice: v.sellingPrice || 0,
-              date: '2026-07-30'
-            }]
-          };
-        }
-        return v;
-      })
-    }));
+  const [products, _setProductsRaw] = useState(() => {
+    try {
+      const saved = localStorage.getItem('elec_products');
+      const loadedProducts = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+      return loadedProducts.map(p => ({
+        ...p,
+        variants: (p.variants || []).map(v => {
+          if (!v.batches || v.batches.length === 0) {
+            return {
+              ...v,
+              batches: [{
+                id: `b_init_${v.id}`,
+                purchaseVoucherId: 'initial',
+                quantity: v.stock || 0,
+                remainingQuantity: v.stock || 0,
+                purchasePrice: v.purchasePrice || 0,
+                sellingPrice: v.sellingPrice || 0,
+                date: '2026-07-30'
+              }]
+            };
+          }
+          return v;
+        })
+      }));
+    } catch (e) {
+      localStorage.removeItem('elec_products');
+      return INITIAL_PRODUCTS;
+    }
   });
+
+  // Safe setter: always ensures every product has a variants array
+  const setProducts = (valueOrFn) => {
+    _setProductsRaw(prev => {
+      const nextVal = typeof valueOrFn === 'function' ? valueOrFn(prev) : valueOrFn;
+      return (nextVal || []).map(p => ({
+        ...p,
+        variants: p.variants || []
+      }));
+    });
+  };
 
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem('elec_categories');
@@ -147,25 +163,34 @@ export const StoreProvider = ({ children }) => {
   const [printDoc, setPrintDoc] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load full store state from Neon Postgres on startup
+  // Load store state from Neon Postgres — DB is the single source of truth
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const response = await fetch('/api/data');
+        const response = await fetch('/api/data', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (response.status === 401) { onAuthError?.(); return; }
         if (response.ok) {
           const data = await response.json();
-          // Only update state if DB has actual saved data (not empty object)
-          if (data && data.products && Array.isArray(data.products) && data.products.length > 0) {
-            setProducts(data.products);
-            if (data.suppliers) setSuppliers(data.suppliers);
-            if (data.sales) setSales(data.sales);
-            if (data.purchases) setPurchases(data.purchases);
-            if (data.expenses) setExpenses(data.expenses);
-            if (data.employees) setEmployees(data.employees);
-            if (data.salaryTx) setSalaryTx(data.salaryTx);
+          
+          // If DB responded without error, it IS the source of truth
+          // Even empty {} means "no data yet" — use empty arrays, not demo data
+          if (data && !data.error) {
+            setProducts(data.products || []);
+            setSuppliers(data.suppliers || []);
+            setSales(data.sales || []);
+            setPurchases(data.purchases || []);
+            setExpenses(data.expenses || []);
+            setEmployees(data.employees || []);
+            setSalaryTx(data.salaryTx || []);
+            if (data.categories) setCategories(data.categories);
+            if (data.brands) setBrands(data.brands);
           }
         }
+        // If response not ok (500 etc), keep localStorage/demo data as fallback
       } catch (err) {
+        // Network error — keep localStorage/demo data as offline fallback
         console.warn("DB unavailable, using local cache:", err);
       } finally {
         setIsLoaded(true);
@@ -197,6 +222,8 @@ export const StoreProvider = ({ children }) => {
 
     // Always cache locally first
     localStorage.setItem('elec_products', JSON.stringify(products));
+    localStorage.setItem('elec_categories', JSON.stringify(categories));
+    localStorage.setItem('elec_brands', JSON.stringify(brands));
     localStorage.setItem('elec_suppliers', JSON.stringify(suppliers));
     localStorage.setItem('elec_sales', JSON.stringify(sales));
     localStorage.setItem('elec_purchases', JSON.stringify(purchases));
@@ -206,11 +233,12 @@ export const StoreProvider = ({ children }) => {
 
     const syncData = async () => {
       try {
-        await fetch('/api/sync', {
+        const res = await fetch('/api/sync', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ products, sales, expenses, suppliers, salaryTx, employees, purchases })
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ products, sales, expenses, suppliers, salaryTx, employees, purchases, categories, brands })
         });
+        if (res.status === 401) { onAuthError?.(); return; }
       } catch (err) {
         // Silently fail - local cache is always the fallback
       }
@@ -218,7 +246,7 @@ export const StoreProvider = ({ children }) => {
 
     const delay = setTimeout(syncData, 800);
     return () => clearTimeout(delay);
-  }, [isLoaded, products, sales, expenses, suppliers, salaryTx, employees, purchases]);
+  }, [isLoaded, products, sales, expenses, suppliers, salaryTx, employees, purchases, categories, brands]);
 
   const addCustomPreset = (newPresetData) => {
     const newPreset = {
@@ -302,7 +330,7 @@ export const StoreProvider = ({ children }) => {
     const list = [];
     products.forEach(p => {
       const cat = categories.find(c => c.id === p.categoryId);
-      p.variants.forEach(v => {
+      (p.variants || []).forEach(v => {
         const attrStr = v.attributes && v.attributes.length > 0
           ? v.attributes.map(a => `${a.label}: ${a.value}`).join(', ')
           : '';

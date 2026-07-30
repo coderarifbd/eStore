@@ -124,7 +124,7 @@ export const Brands = ({ setActiveTab }) => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.25rem' }}>
           {filteredBrands.map(bName => {
             const brandProds = products.filter(p => p.brand === bName);
-            const totalVariants = brandProds.reduce((acc, p) => acc + p.variants.length, 0);
+            const totalVariants = brandProds.reduce((acc, p) => acc + (p.variants || []).length, 0);
 
             return (
               <div key={bName} className="card" style={{ borderLeft: '4px solid #8b5cf6', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -188,7 +188,7 @@ export const Brands = ({ setActiveTab }) => {
               <tbody>
                 {filteredBrands.map((bName, idx) => {
                   const brandProds = products.filter(p => p.brand === bName);
-                  const totalVariants = brandProds.reduce((acc, p) => acc + p.variants.length, 0);
+                  const totalVariants = brandProds.reduce((acc, p) => acc + (p.variants || []).length, 0);
 
                   return (
                     <tr key={bName}>

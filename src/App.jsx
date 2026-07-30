@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StoreProvider, useStore } from './context/StoreContext';
+import { LoginPage } from './components/LoginPage';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { POS } from './components/POS';
@@ -10,11 +11,12 @@ import { Brands } from './components/Brands';
 import { Expenses } from './components/Expenses';
 import { Employees } from './components/Employees';
 import { Reports } from './components/Reports';
+import { UserManagement } from './components/UserManagement';
 import { PrintInvoiceModal } from './components/PrintInvoiceModal';
 import { BackupModal } from './components/BackupModal';
-import { LayoutDashboard, ShoppingCart, FileText, Package, FolderPlus, Tag, Receipt, Users, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, FileText, Package, FolderPlus, Tag, Receipt, Users, TrendingUp, UserCog } from 'lucide-react';
 
-const AppContent = () => {
+const AppContent = ({ currentUser, onLogout }) => {
   const { lang } = useStore();
   const isBn = lang === 'bn';
 
@@ -25,7 +27,7 @@ const AppContent = () => {
   const getTabTitle = () => {
     switch (activeTab) {
       case 'dashboard': return { title: isBn ? 'ড্যাশবোর্ড ও ওভারভিউ' : 'Dashboard & Overview', icon: LayoutDashboard };
-      case 'pos': return { title: isBn ? 'বিক্রয় ও পজ (POS Cash Memo)' : 'POS Sales Counter', icon: ShoppingCart };
+      case 'pos': return { title: isBn ? 'বিক্রয় ও পজ (POS Cash Memo)' : 'POS Sales Counter', icon: ShoppingCart };
       case 'purchases': return { title: isBn ? 'ক্রয় ভাউচার এন্ট্রি (Purchase Voucher)' : 'Purchase Vouchers', icon: FileText };
       case 'inventory': return { title: isBn ? 'পণ্য ও ইনভেন্টরি স্টক (Inventory)' : 'Inventory & Stock', icon: Package };
       case 'categories': return { title: isBn ? 'ক্যাটাগরি ম্যানেজমেন্ট (Category Manager)' : 'Category Manager', icon: FolderPlus };
@@ -33,6 +35,7 @@ const AppContent = () => {
       case 'expenses': return { title: isBn ? 'দোকানের ব্যয় খাতা (Expense Tracker)' : 'Shop Expenses', icon: Receipt };
       case 'employees': return { title: isBn ? 'কর্মচারী ও বেতন (Payroll)' : 'Employee Payroll', icon: Users };
       case 'reports': return { title: isBn ? 'লাভ-ক্ষতি ও আর্থিক রিপোর্ট (Reports)' : 'Profit & Loss Reports', icon: TrendingUp };
+      case 'users': return { title: isBn ? 'ইউজার ম্যানেজমেন্ট' : 'User Management', icon: UserCog };
       default: return { title: isBn ? 'ড্যাশবোর্ড' : 'Dashboard', icon: LayoutDashboard };
     }
   };
@@ -47,7 +50,9 @@ const AppContent = () => {
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
-        onOpenBackup={() => setIsBackupOpen(true)} 
+        onOpenBackup={() => setIsBackupOpen(true)}
+        currentUser={currentUser}
+        onLogout={onLogout}
       />
 
       {/* Right Main Content Area */}
@@ -93,6 +98,7 @@ const AppContent = () => {
           {activeTab === 'expenses' && <Expenses />}
           {activeTab === 'employees' && <Employees />}
           {activeTab === 'reports' && <Reports />}
+          {activeTab === 'users' && <UserManagement />}
         </main>
 
         {/* Footer */}
@@ -122,9 +128,34 @@ const AppContent = () => {
 };
 
 export default function App() {
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('estore_token'));
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('estore_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+
+  const handleLogin = (token, user) => {
+    setAuthToken(token);
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('estore_token');
+    localStorage.removeItem('estore_user');
+    setAuthToken(null);
+    setCurrentUser(null);
+  };
+
+  // If no token, show login
+  if (!authToken || !currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
-    <StoreProvider>
-      <AppContent />
+    <StoreProvider authToken={authToken} onAuthError={handleLogout}>
+      <AppContent currentUser={currentUser} onLogout={handleLogout} />
     </StoreProvider>
   );
 }
