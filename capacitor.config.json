@@ -1,0 +1,12 @@
+{
+  "appId": "com.fardinelectrical.estore",
+  "appName": "ফারদিন ইলেক্ট্রিক্যাল স্টোর",
+  "webDir": "dist",
+  "server": {
+    "url": "https://e-store-one-eta.vercel.app",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
