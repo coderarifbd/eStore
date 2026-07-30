@@ -46,7 +46,7 @@ export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup, currentUser, on
   const navItems = allNavItems.filter(item => item.roles.includes(currentUser?.role || 'staff'));
 
   return (
-    <aside style={{
+    <aside className="desktop-sidebar" style={{
       width: isCollapsed ? '80px' : '260px',
       minWidth: isCollapsed ? '80px' : '260px',
       backgroundColor: '#0f172a',

@@ -397,3 +397,132 @@ body {
     display: none !important;
   }
 }
+
+/* Native Mobile App UI Styles */
+@media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+  
+  .main-content {
+    padding: 1rem 0.85rem 5.5rem 0.85rem !important;
+  }
+
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background-color: #111827;
+  border-top: 1px solid #26334d;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 9999;
+  padding: 0 0.25rem;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 0.725rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex: 1;
+  transition: all 0.15s ease;
+}
+
+.mobile-nav-item.active {
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.mobile-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 64px;
+  background-color: rgba(11, 15, 25, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 9998;
+  display: flex;
+  align-items: flex-end;
+  animation: fadeIn 0.2s ease;
+}
+
+.mobile-drawer-content {
+  width: 100%;
+  background-color: #111827;
+  border-top: 1px solid #26334d;
+  border-radius: 16px 16px 0 0;
+  padding: 1.25rem;
+  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mobile-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #26334d;
+  margin-bottom: 0.85rem;
+}
+
+.mobile-drawer-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.mobile-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  background-color: #0b0f19;
+  border: 1px solid #26334d;
+  border-radius: 10px;
+  color: #f3f4f6;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mobile-drawer-item.active {
+  border-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.mobile-drawer-item.danger {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+  grid-column: span 2;
+}
+
