@@ -147,22 +147,22 @@ export const StoreProvider = ({ children }) => {
   const [printDoc, setPrintDoc] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load initial database records from Neon Postgres
+  // Load full store state from Neon Postgres on startup
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         const response = await fetch('/api/data');
         if (response.ok) {
           const data = await response.json();
-          if (data && !data.error) {
-            // Always load whatever is in the DB (even if empty arrays)
-            if (Array.isArray(data.products)) setProducts(data.products);
-            if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
-            if (Array.isArray(data.sales)) setSales(data.sales);
-            if (Array.isArray(data.purchases)) setPurchases(data.purchases);
-            if (Array.isArray(data.expenses)) setExpenses(data.expenses);
-            if (Array.isArray(data.employees)) setEmployees(data.employees);
-            if (Array.isArray(data.salaryTx)) setSalaryTx(data.salaryTx);
+          // Only update state if DB has actual saved data (not empty object)
+          if (data && data.products && Array.isArray(data.products) && data.products.length > 0) {
+            setProducts(data.products);
+            if (data.suppliers) setSuppliers(data.suppliers);
+            if (data.sales) setSales(data.sales);
+            if (data.purchases) setPurchases(data.purchases);
+            if (data.expenses) setExpenses(data.expenses);
+            if (data.employees) setEmployees(data.employees);
+            if (data.salaryTx) setSalaryTx(data.salaryTx);
           }
         }
       } catch (err) {
@@ -191,11 +191,11 @@ export const StoreProvider = ({ children }) => {
     localStorage.setItem('elec_presets', JSON.stringify(presets));
   }, [presets]);
 
-  // Auto-Sync to Neon Postgres when state changes
+  // Auto-Sync full state to Neon Postgres on any change
   useEffect(() => {
     if (!isLoaded) return;
 
-    // Cache locally as immediate fallback
+    // Always cache locally first
     localStorage.setItem('elec_products', JSON.stringify(products));
     localStorage.setItem('elec_suppliers', JSON.stringify(suppliers));
     localStorage.setItem('elec_sales', JSON.stringify(sales));
@@ -209,22 +209,14 @@ export const StoreProvider = ({ children }) => {
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            products,
-            sales,
-            expenses,
-            suppliers,
-            salaryTx,
-            employees,
-            purchases
-          })
+          body: JSON.stringify({ products, sales, expenses, suppliers, salaryTx, employees, purchases })
         });
       } catch (err) {
-        console.error("Neon Postgres database sync failed:", err);
+        // Silently fail - local cache is always the fallback
       }
     };
 
-    const delay = setTimeout(syncData, 600);
+    const delay = setTimeout(syncData, 800);
     return () => clearTimeout(delay);
   }, [isLoaded, products, sales, expenses, suppliers, salaryTx, employees, purchases]);
 
