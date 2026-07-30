@@ -14,7 +14,6 @@ import { Reports } from './components/Reports';
 import { UserManagement } from './components/UserManagement';
 import { PrintInvoiceModal } from './components/PrintInvoiceModal';
 import { BackupModal } from './components/BackupModal';
-import { MobileBottomNav } from './components/MobileBottomNav';
 import { LayoutDashboard, ShoppingCart, FileText, Package, FolderPlus, Tag, Receipt, Users, TrendingUp, UserCog } from 'lucide-react';
 
 const AppContent = ({ currentUser, onLogout }) => {
@@ -57,7 +56,7 @@ const AppContent = ({ currentUser, onLogout }) => {
   const HeaderIcon = currentTabInfo.icon;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0f172a' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
       
       {/* Left Sidebar Navigation */}
       <Sidebar 
@@ -73,9 +72,9 @@ const AppContent = ({ currentUser, onLogout }) => {
         
         {/* Top Sticky Page Title Header */}
         <header style={{
-          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          backgroundColor: 'rgba(17, 24, 39, 0.95)',
           backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid #334155',
+          borderBottom: '1px solid var(--border-color)',
           padding: '1rem 1.75rem',
           display: 'flex',
           justify: 'space-between',
@@ -85,15 +84,15 @@ const AppContent = ({ currentUser, onLogout }) => {
           zIndex: 90
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }}>
+            <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(37, 99, 235, 0.12)', color: 'var(--accent-primary)' }}>
               <HeaderIcon size={22} />
             </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               {currentTabInfo.title}
             </h2>
           </div>
 
-          <div style={{ fontSize: '0.85rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className="badge badge-green">
               {isBn ? 'স্টোর অবস্থা: লাইভ' : 'System Status: Active'}
             </span>
@@ -116,12 +115,12 @@ const AppContent = ({ currentUser, onLogout }) => {
 
         {/* Footer */}
         <footer style={{
-          backgroundColor: '#0f172a',
-          borderTop: '1px solid #334155',
+          backgroundColor: 'var(--bg-secondary)',
+          borderTop: '1px solid var(--border-color)',
           padding: '1rem',
           textAlign: 'center',
           fontSize: '0.825rem',
-          color: '#64748b',
+          color: 'var(--text-muted)',
           marginTop: 'auto'
         }}>
           <div>
@@ -135,15 +134,6 @@ const AppContent = ({ currentUser, onLogout }) => {
 
       {/* Backup & Restore Modal */}
       <BackupModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />
-
-      {/* Smartphone Native Bottom Navigation Bar */}
-      <MobileBottomNav 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        onOpenBackup={() => setIsBackupOpen(true)}
-        currentUser={currentUser}
-        onLogout={onLogout}
-      />
 
     </div>
   );

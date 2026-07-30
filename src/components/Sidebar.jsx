@@ -49,8 +49,8 @@ export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup, currentUser, on
     <aside className="desktop-sidebar" style={{
       width: isCollapsed ? '80px' : '260px',
       minWidth: isCollapsed ? '80px' : '260px',
-      backgroundColor: '#0f172a',
-      borderRight: '1px solid #334155',
+      backgroundColor: 'var(--bg-secondary)',
+      borderRight: '1px solid var(--border-color)',
       display: 'flex',
       flexDirection: 'column',
       justify: 'space-between',
