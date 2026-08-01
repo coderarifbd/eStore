@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Search, AlertTriangle } from 'lucide-react';
 
-export const AutocompleteSearch = ({ onSelectVariant, placeholder, showPurchasePrice = false }) => {
+export const AutocompleteSearch = ({ onSelectVariant, placeholder, showPurchasePrice = false, selectedBrand = 'ALL' }) => {
   const { lang, getFlatVariants } = useStore();
   const isBn = lang === 'bn';
 
@@ -15,6 +15,17 @@ export const AutocompleteSearch = ({ onSelectVariant, placeholder, showPurchaseP
 
   // Filter items matching query across name, brand, spec, SKU and custom attributes
   const filteredItems = query.trim() === '' ? [] : allVariants.filter(item => {
+    // 1. Filter by selectedBrand if specified
+    if (selectedBrand && selectedBrand !== 'ALL') {
+      const itemBrand = (item.brand || '').toLowerCase();
+      const targetBrand = selectedBrand.toLowerCase();
+      const brandList = itemBrand.split(',').map(b => b.trim());
+      if (itemBrand !== targetBrand && !brandList.includes(targetBrand)) {
+        return false;
+      }
+    }
+
+    // 2. Search query filter
     const q = query.toLowerCase();
     return (
       item.productNameBn.toLowerCase().includes(q) ||

@@ -18,11 +18,12 @@ import {
 import confetti from 'canvas-confetti';
 
 export const POS = () => {
-  const { lang, sales, addSale, updateSale, deleteSale, setPrintDoc, showConfirm } = useStore();
+  const { lang, sales, brands, addSale, updateSale, deleteSale, setPrintDoc, showConfirm } = useStore();
   const isBn = lang === 'bn';
 
   // Screen View Switcher: 'pos' (New Sale) vs 'history' (Old Invoices Archive)
   const [posTab, setPosTab] = useState('pos');
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState('ALL');
 
   // POS State
   const [cart, setCart] = useState([]);
@@ -285,18 +286,48 @@ export const POS = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             
             <div className="card" style={{ position: 'relative', zIndex: 100 }}>
-              <div className="card-title" style={{ color: '#06b6d4' }}>
-                <ShoppingCart size={22} />
-                <span>{isBn ? 'খুচরা বিক্রয় সার্চ ও অটো ড্রপডাউন (POS Counter)' : 'Retail POS Counter'}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div className="card-title" style={{ color: '#06b6d4', marginBottom: 0 }}>
+                  <ShoppingCart size={22} />
+                  <span>{isBn ? 'খুচরা বিক্রয় সার্চ কাউন্টার (POS Counter)' : 'Retail POS Counter'}</span>
+                </div>
+
+                {/* Brand Filter Selector */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>
+                    {isBn ? 'ব্র্যান্ড সিলেক্ট:' : 'Select Brand:'}
+                  </label>
+                  <select
+                    className="select-control"
+                    value={selectedBrandFilter}
+                    onChange={(e) => setSelectedBrandFilter(e.target.value)}
+                    style={{
+                      padding: '0.35rem 0.65rem',
+                      fontSize: '0.85rem',
+                      backgroundColor: selectedBrandFilter !== 'ALL' ? 'rgba(139, 92, 246, 0.2)' : '#0f172a',
+                      borderColor: selectedBrandFilter !== 'ALL' ? '#8b5cf6' : '#334155',
+                      color: selectedBrandFilter !== 'ALL' ? '#c084fc' : '#f8fafc',
+                      fontWeight: selectedBrandFilter !== 'ALL' ? 700 : 500,
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="ALL">{isBn ? '-- সকল ব্র্যান্ড --' : '-- All Brands --'}</option>
+                    {(brands || []).map(b => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              
-              <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.85rem' }}>
-                {isBn ? 'পণ্যের নাম, গজ, তারের সাইজ বা ওয়াট টাইপ করে সিলেক্ট করুন:' : 'Search item name, goj, size or wattage:'}
-              </p>
 
               <AutocompleteSearch
                 onSelectVariant={handleSelectVariant}
-                placeholder={isBn ? 'পণ্য সার্চ করুন (যেমন: BRB 1.5rm, 9W LED)...' : 'Search products by name, brand, spec...'}
+                selectedBrand={selectedBrandFilter}
+                placeholder={
+                  selectedBrandFilter !== 'ALL'
+                    ? (isBn ? `"${selectedBrandFilter}" ব্র্যান্ডের পণ্য সার্চ করুন...` : `Search ${selectedBrandFilter} products...`)
+                    : (isBn ? 'পণ্যের নাম, ওয়াট, সাইজ বা ব্র্যান্ড লিখে সার্চ করুন...' : 'Search products by name, brand, spec...')
+                }
               />
             </div>
 
