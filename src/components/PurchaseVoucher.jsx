@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { AutocompleteSearch } from './AutocompleteSearch';
 import { 
@@ -13,8 +13,174 @@ import {
   History,
   Search,
   Eye,
-  Edit3
+  Edit3,
+  ChevronDown,
+  X
 } from 'lucide-react';
+
+const SearchableVariantDropdown = ({ options = [], value, onChange, disabled, isBn, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value);
+
+  const filteredOptions = options.filter(o => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      o.label.toLowerCase().includes(q) ||
+      o.displaySpec.toLowerCase().includes(q) ||
+      (o.brand && o.brand.toLowerCase().includes(q))
+    );
+  });
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+      {/* Control Box */}
+      <div
+        onClick={() => {
+          if (!disabled) setIsOpen(prev => !prev);
+        }}
+        style={{
+          width: '100%',
+          padding: '0.5rem 0.75rem',
+          backgroundColor: disabled ? '#1e293b' : '#0f172a',
+          border: isOpen ? '1px solid #06b6d4' : '1px solid #334155',
+          borderRadius: '8px',
+          color: selectedOption ? '#f8fafc' : '#94a3b8',
+          fontSize: '0.875rem',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.5rem',
+          boxSizing: 'border-box',
+          opacity: disabled ? 0.6 : 1,
+          minHeight: '38px'
+        }}
+      >
+        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {selectedOption
+            ? selectedOption.label
+            : (placeholder || (isBn ? '-- ভেরিয়েন্ট নির্বাচন করুন --' : '-- Select Variant Spec --'))}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+          {selectedOption && !disabled && (
+            <X
+              size={15}
+              color="#94a3b8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange('');
+                setSearch('');
+              }}
+              style={{ cursor: 'pointer' }}
+            />
+          )}
+          <ChevronDown size={16} color="#94a3b8" />
+        </div>
+      </div>
+
+      {/* Dropdown Menu with Search Field */}
+      {isOpen && !disabled && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            backgroundColor: '#0f172a',
+            border: '1px solid #06b6d4',
+            borderRadius: '8px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(6, 182, 212, 0.2)',
+            zIndex: 9999,
+            overflow: 'hidden'
+          }}
+        >
+          {/* Search Input */}
+          <div style={{ padding: '0.5rem', borderBottom: '1px solid #1e293b', backgroundColor: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Search size={15} color="#06b6d4" />
+            <input
+              type="text"
+              autoFocus
+              placeholder={isBn ? 'টাইপ করে ভেরিয়েন্ট খুঁজুন (যেমন: Switch, ERICSON)...' : 'Type to search variation...'}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'none',
+                border: 'none',
+                color: '#f8fafc',
+                fontSize: '0.85rem',
+                outline: 'none'
+              }}
+            />
+            {search && (
+              <X size={14} color="#94a3b8" onClick={() => setSearch('')} style={{ cursor: 'pointer' }} />
+            )}
+          </div>
+
+          {/* Options List */}
+          <div style={{ maxHeight: '220px', overflowY: 'auto', padding: '0.25rem' }}>
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt) => {
+                const isSelected = opt.value === value;
+                return (
+                  <div
+                    key={opt.value}
+                    onClick={() => {
+                      onChange(opt.value);
+                      setIsOpen(false);
+                    }}
+                    style={{
+                      padding: '0.55rem 0.75rem',
+                      fontSize: '0.875rem',
+                      color: isSelected ? '#06b6d4' : '#e2e8f0',
+                      backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '2px',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    <span style={{ fontWeight: 600 }}>{opt.displaySpec}</span>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: '0.5rem' }}>
+                      (কিনা: ৳{opt.purchasePrice} • বিক্রি: ৳{opt.sellingPrice})
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: '#94a3b8', textAlign: 'center' }}>
+                {isBn ? 'কোনো ভেরিয়েন্ট পাওয়া যায়নি' : 'No matching variation found'}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const PurchaseVoucher = () => {
   const { lang, products, categories, suppliers, purchases, addPurchaseVoucher, updatePurchaseVoucher, deletePurchaseVoucher, addProduct, showConfirm } = useStore();
@@ -495,27 +661,9 @@ export const PurchaseVoucher = () => {
                 {/* Variant Select */}
                 <div className="form-group">
                   <label className="form-label">{isBn ? 'সুনির্দিষ্ট ভেরিয়েন্ট (সাইজ / ওয়াট)' : 'Select Variation'}</label>
-                  <select
-                    className="select-control"
-                    value={selectedVarId}
-                    disabled={!selectedProdId}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedVarId(val);
-                      let realVarId = val;
-                      if (val.includes('__BRAND__')) {
-                        realVarId = val.split('__BRAND__')[0];
-                      }
-                      const v = activeProduct?.variants.find(varObj => varObj.id === realVarId);
-                      if (v) {
-                        setPurchaseRate(v.purchasePrice || '');
-                        setSellingRate(v.sellingPrice || '');
-                      }
-                    }}
-                  >
-                    <option value="">{isBn ? '-- ভেরিয়েন্ট সাইজ বা ওয়াট --' : '-- Select Variant Spec --'}</option>
-                    {(() => {
-                      if (!activeProduct || !activeProduct.variants) return null;
+                  <SearchableVariantDropdown
+                    options={(() => {
+                      if (!activeProduct || !activeProduct.variants) return [];
                       const brandList = activeProduct.brand
                         ? activeProduct.brand.split(',').map(b => b.trim()).filter(Boolean)
                         : [];
@@ -527,26 +675,50 @@ export const PurchaseVoucher = () => {
                             const hasBrandInSpec = v.spec.toLowerCase().includes(b.toLowerCase());
                             const displaySpec = hasBrandInSpec ? v.spec : `${v.spec} (${b})`;
                             const optionValue = hasBrandInSpec ? v.id : `${v.id}__BRAND__${b}`;
-                            options.push(
-                              <option key={`${b}_${v.id}`} value={optionValue}>
-                                {displaySpec} (কিনা: ৳{v.purchasePrice || 0} • বিক্রি: ৳{v.sellingPrice || 0})
-                              </option>
-                            );
+                            options.push({
+                              value: optionValue,
+                              id: v.id,
+                              brand: b,
+                              spec: v.spec,
+                              displaySpec,
+                              purchasePrice: v.purchasePrice || 0,
+                              sellingPrice: v.sellingPrice || 0,
+                              label: `${displaySpec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
+                            });
                           });
                         });
                       } else {
                         activeProduct.variants.forEach(v => {
-                          options.push(
-                            <option key={v.id} value={v.id}>
-                              {v.spec} (কিনা: ৳{v.purchasePrice || 0} • বিক্রি: ৳{v.sellingPrice || 0})
-                            </option>
-                          );
+                          options.push({
+                            value: v.id,
+                            id: v.id,
+                            brand: '',
+                            spec: v.spec,
+                            displaySpec: v.spec,
+                            purchasePrice: v.purchasePrice || 0,
+                            sellingPrice: v.sellingPrice || 0,
+                            label: `${v.spec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
+                          });
                         });
                       }
-
                       return options;
                     })()}
-                  </select>
+                    value={selectedVarId}
+                    disabled={!selectedProdId}
+                    isBn={isBn}
+                    onChange={(val) => {
+                      setSelectedVarId(val);
+                      let realVarId = val;
+                      if (val.includes('__BRAND__')) {
+                        realVarId = val.split('__BRAND__')[0];
+                      }
+                      const v = activeProduct?.variants.find(varObj => varObj.id === realVarId);
+                      if (v) {
+                        setPurchaseRate(v.purchasePrice || '');
+                        setSellingRate(v.sellingPrice || '');
+                      }
+                    }}
+                  />
                 </div>
 
                 {/* Qty */}
@@ -1090,28 +1262,9 @@ export const PurchaseVoucher = () => {
                       ))}
                     </select>
 
-                    <select
-                      className="select-control"
-                      value={editModalVarId}
-                      disabled={!editModalProdId}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setEditModalVarId(val);
-                        let realVarId = val;
-                        if (val.includes('__BRAND__')) {
-                          realVarId = val.split('__BRAND__')[0];
-                        }
-                        const v = activeEditModalProduct?.variants.find(varObj => varObj.id === realVarId);
-                        if (v) {
-                          setEditModalRate(v.purchasePrice || '');
-                          setEditModalSellingRate(v.sellingPrice || '');
-                        }
-                      }}
-                      style={{ padding: '0.4rem', fontSize: '0.85rem' }}
-                    >
-                      <option value="">{isBn ? '-- ভেরিয়েন্ট সাইজ --' : '-- Spec --'}</option>
-                      {(() => {
-                        if (!activeEditModalProduct || !activeEditModalProduct.variants) return null;
+                    <SearchableVariantDropdown
+                      options={(() => {
+                        if (!activeEditModalProduct || !activeEditModalProduct.variants) return [];
                         const brandList = activeEditModalProduct.brand
                           ? activeEditModalProduct.brand.split(',').map(b => b.trim()).filter(Boolean)
                           : [];
@@ -1123,25 +1276,51 @@ export const PurchaseVoucher = () => {
                               const hasBrandInSpec = v.spec.toLowerCase().includes(b.toLowerCase());
                               const displaySpec = hasBrandInSpec ? v.spec : `${v.spec} (${b})`;
                               const optionValue = hasBrandInSpec ? v.id : `${v.id}__BRAND__${b}`;
-                              options.push(
-                                <option key={`${b}_${v.id}`} value={optionValue}>
-                                  {displaySpec} (৳{v.purchasePrice})
-                                </option>
-                              );
+                              options.push({
+                                value: optionValue,
+                                id: v.id,
+                                brand: b,
+                                spec: v.spec,
+                                displaySpec,
+                                purchasePrice: v.purchasePrice || 0,
+                                sellingPrice: v.sellingPrice || 0,
+                                label: `${displaySpec} (৳${v.purchasePrice})`
+                              });
                             });
                           });
                         } else {
                           activeEditModalProduct.variants.forEach(v => {
-                            options.push(
-                              <option key={v.id} value={v.id}>
-                                {v.spec} (৳{v.purchasePrice})
-                              </option>
-                            );
+                            options.push({
+                              value: v.id,
+                              id: v.id,
+                              brand: '',
+                              spec: v.spec,
+                              displaySpec: v.spec,
+                              purchasePrice: v.purchasePrice || 0,
+                              sellingPrice: v.sellingPrice || 0,
+                              label: `${v.spec} (৳${v.purchasePrice})`
+                            });
                           });
                         }
                         return options;
                       })()}
-                    </select>
+                      value={editModalVarId}
+                      disabled={!editModalProdId}
+                      isBn={isBn}
+                      placeholder={isBn ? '-- ভেরিয়েন্ট সাইজ --' : '-- Spec --'}
+                      onChange={(val) => {
+                        setEditModalVarId(val);
+                        let realVarId = val;
+                        if (val.includes('__BRAND__')) {
+                          realVarId = val.split('__BRAND__')[0];
+                        }
+                        const v = activeEditModalProduct?.variants.find(varObj => varObj.id === realVarId);
+                        if (v) {
+                          setEditModalRate(v.purchasePrice || '');
+                          setEditModalSellingRate(v.sellingPrice || '');
+                        }
+                      }}
+                    />
 
                     <input
                       type="number"
