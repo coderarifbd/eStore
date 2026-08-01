@@ -479,49 +479,52 @@ export const Inventory = () => {
     setProdBrands(newBrands);
 
     if (addedBrands.length > 0) {
-      // Find base variation specs from variationGroups or variationOptions
-      let baseSpecs = [];
+      const cleanSpecsSet = new Set();
 
-      if (variationGroups.length > 0 && variationGroups[0].values) {
-        baseSpecs = variationGroups[0].values
-          .split(',')
-          .map(v => v.trim())
-          .filter(Boolean);
-      }
-
-      if (baseSpecs.length === 0 && variationOptions.length > 0) {
-        const cleanSet = new Set();
-        variationOptions.forEach(opt => {
-          let s = opt.spec || '';
-          prodBrands.forEach(b => {
-            s = s.replace(new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i'), '');
+      // 1. From variationGroups
+      variationGroups.forEach(grp => {
+        if (grp.values) {
+          grp.values.split(',').forEach(val => {
+            let s = val.trim();
+            newBrands.forEach(b => {
+              s = s.replace(new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i'), '');
+            });
+            if (s.trim()) cleanSpecsSet.add(s.trim());
           });
-          if (s.trim()) cleanSet.add(s.trim());
+        }
+      });
+
+      // 2. From variationOptions
+      variationOptions.forEach(opt => {
+        let s = opt.spec || '';
+        newBrands.forEach(b => {
+          s = s.replace(new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i'), '');
         });
-        baseSpecs = Array.from(cleanSet);
-      }
+        if (s.trim()) cleanSpecsSet.add(s.trim());
+      });
+
+      const baseSpecs = Array.from(cleanSpecsSet);
 
       if (baseSpecs.length > 0) {
-        const newCombos = [];
-        addedBrands.forEach(brand => {
-          baseSpecs.forEach(spec => {
-            const comboSpec = `${brand} - ${spec}`;
-            const exists = variationOptions.some(opt => opt.spec === comboSpec);
-            if (!exists) {
-              newCombos.push({
-                spec: comboSpec,
-                purchasePrice: 0,
-                sellingPrice: '',
-                stock: 0,
-                reorderLevel: 5
-              });
-            }
+        setVariationOptions(prev => {
+          const nextOptions = [...prev];
+          addedBrands.forEach(brand => {
+            baseSpecs.forEach(spec => {
+              const comboSpec = `${brand} - ${spec}`;
+              const exists = nextOptions.some(opt => opt.spec === comboSpec);
+              if (!exists) {
+                nextOptions.push({
+                  spec: comboSpec,
+                  purchasePrice: 0,
+                  sellingPrice: 0,
+                  stock: 0,
+                  reorderLevel: 5
+                });
+              }
+            });
           });
+          return nextOptions;
         });
-
-        if (newCombos.length > 0) {
-          setVariationOptions(prev => [...prev, ...newCombos]);
-        }
       }
     }
   };
@@ -574,10 +577,41 @@ export const Inventory = () => {
     if (!editingProduct || !prodNameBn) return;
 
     const finalBrand = prodBrands.length > 0 ? prodBrands.join(', ') : (brands[0] || 'Unbranded');
-
     const groupNamesStr = variationGroups.map(g => g.name).join(' + ');
 
-    const formattedVariants = variationOptions.map((opt, idx) => ({
+    // Ensure all selected brands have variation options generated
+    let finalVariationOptions = [...variationOptions];
+    if (prodBrands.length > 0) {
+      const cleanSpecsSet = new Set();
+      variationOptions.forEach(opt => {
+        let s = opt.spec || '';
+        prodBrands.forEach(b => {
+          s = s.replace(new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i'), '');
+        });
+        if (s.trim()) cleanSpecsSet.add(s.trim());
+      });
+      const baseSpecs = Array.from(cleanSpecsSet);
+
+      if (baseSpecs.length > 0) {
+        prodBrands.forEach(brand => {
+          baseSpecs.forEach(spec => {
+            const comboSpec = `${brand} - ${spec}`;
+            const exists = finalVariationOptions.some(opt => opt.spec === comboSpec);
+            if (!exists) {
+              finalVariationOptions.push({
+                spec: comboSpec,
+                purchasePrice: 0,
+                sellingPrice: 0,
+                stock: 0,
+                reorderLevel: 5
+              });
+            }
+          });
+        });
+      }
+    }
+
+    const formattedVariants = finalVariationOptions.map((opt, idx) => ({
       id: opt.id || `v_${Date.now()}_${idx}`,
       spec: opt.spec || `Option-${idx + 1}`,
       sku: `${finalBrand.substring(0, 3)}-${(opt.spec || `O${idx + 1}`).replace(/\s+/g, '')}`,
