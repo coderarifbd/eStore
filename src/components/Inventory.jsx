@@ -472,6 +472,60 @@ export const Inventory = () => {
     resetForm();
   };
 
+  // Handler when brands are added/removed in Select Brand(s)
+  const handleProdBrandsChange = (newBrands) => {
+    // Find newly added brands
+    const addedBrands = newBrands.filter(b => !prodBrands.includes(b));
+    setProdBrands(newBrands);
+
+    if (addedBrands.length > 0) {
+      // Find base variation specs from variationGroups or variationOptions
+      let baseSpecs = [];
+
+      if (variationGroups.length > 0 && variationGroups[0].values) {
+        baseSpecs = variationGroups[0].values
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean);
+      }
+
+      if (baseSpecs.length === 0 && variationOptions.length > 0) {
+        const cleanSet = new Set();
+        variationOptions.forEach(opt => {
+          let s = opt.spec || '';
+          prodBrands.forEach(b => {
+            s = s.replace(new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i'), '');
+          });
+          if (s.trim()) cleanSet.add(s.trim());
+        });
+        baseSpecs = Array.from(cleanSet);
+      }
+
+      if (baseSpecs.length > 0) {
+        const newCombos = [];
+        addedBrands.forEach(brand => {
+          baseSpecs.forEach(spec => {
+            const comboSpec = `${brand} - ${spec}`;
+            const exists = variationOptions.some(opt => opt.spec === comboSpec);
+            if (!exists) {
+              newCombos.push({
+                spec: comboSpec,
+                purchasePrice: 0,
+                sellingPrice: '',
+                stock: 0,
+                reorderLevel: 5
+              });
+            }
+          });
+        });
+
+        if (newCombos.length > 0) {
+          setVariationOptions(prev => [...prev, ...newCombos]);
+        }
+      }
+    }
+  };
+
   // Populate Edit Product Modal with exact same rich form
   const handleOpenEditProductModal = (prod) => {
     setEditingProduct(prod);
@@ -483,8 +537,23 @@ export const Inventory = () => {
     setProdBrands(bArray);
     setProdUnit(prod.unit || 'Goj');
     
+    // Cleanly extract base specs without brand prefix for Group Values
+    const cleanSpecsSet = new Set();
+    (prod.variants || []).forEach(v => {
+      let cleanSpec = v.spec || '';
+      bArray.forEach(b => {
+        const regex = new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i');
+        cleanSpec = cleanSpec.replace(regex, '');
+      });
+      if (cleanSpec.trim()) {
+        cleanSpecsSet.add(cleanSpec.trim());
+      }
+    });
+
+    const cleanValues = Array.from(cleanSpecsSet).join(', ');
+
     setVariationGroups([
-      { id: 1, name: prod.variationTypeName || (isBn ? 'ভেরিয়শন টাইপ' : 'Variation Type'), values: (prod.variants || []).map(v => v.spec).join(', ') }
+      { id: 1, name: prod.variationTypeName || (isBn ? 'টাইপ' : 'Type'), values: cleanValues || '' }
     ]);
     
     setVariationOptions((prod.variants || []).map(v => ({
@@ -1028,7 +1097,7 @@ export const Inventory = () => {
                     <MultiSelectBrandDropdown
                       brands={brands}
                       selectedBrands={prodBrands}
-                      onChange={setProdBrands}
+                      onChange={handleProdBrandsChange}
                       isBn={isBn}
                     />
                   </div>
