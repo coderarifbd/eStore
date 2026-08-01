@@ -645,14 +645,20 @@ export const Inventory = () => {
 
     const groupNamesStr = variationGroups.map(g => g.name).join(' + ');
 
-    const formattedVariants = variationOptions.map((opt, idx) => ({
-      spec: opt.spec || `Option-${idx + 1}`,
-      sku: `${finalBrand.substring(0, 3)}-${(opt.spec || `O${idx + 1}`).replace(/\s+/g, '')}`,
-      purchasePrice: Number(opt.purchasePrice || 0),
-      sellingPrice: Number(opt.sellingPrice || 0),
-      stock: Number(opt.stock || 0),
-      reorderLevel: Number(opt.reorderLevel || 5)
-    }));
+    const formattedVariants = variationOptions.map((opt, idx) => {
+      const isPlaceholderSpec = !opt.spec || /^Option-\d+$/i.test(opt.spec.trim()) || ['standard', 'default'].includes(opt.spec.trim().toLowerCase());
+      const cleanSpec = isPlaceholderSpec ? '' : opt.spec.trim();
+      const skuPart = cleanSpec ? cleanSpec.replace(/\s+/g, '') : `0${idx + 1}`;
+
+      return {
+        spec: cleanSpec,
+        sku: `${finalBrand.substring(0, 3)}-${skuPart}`,
+        purchasePrice: Number(opt.purchasePrice || 0),
+        sellingPrice: Number(opt.sellingPrice || 0),
+        stock: Number(opt.stock || 0),
+        reorderLevel: Number(opt.reorderLevel || 5)
+      };
+    });
 
     const newProd = {
       nameBn: prodNameBn,
@@ -823,15 +829,21 @@ export const Inventory = () => {
       }
     }
 
-    const formattedVariants = finalVariationOptions.map((opt, idx) => ({
-      id: opt.id || `v_${Date.now()}_${idx}`,
-      spec: opt.spec || `Option-${idx + 1}`,
-      sku: `${finalBrand.substring(0, 3)}-${(opt.spec || `O${idx + 1}`).replace(/\s+/g, '')}`,
-      purchasePrice: Number(opt.purchasePrice || 0),
-      sellingPrice: Number(opt.sellingPrice || 0),
-      stock: Number(opt.stock || 0),
-      reorderLevel: Number(opt.reorderLevel || 5)
-    }));
+    const formattedVariants = finalVariationOptions.map((opt, idx) => {
+      const isPlaceholderSpec = !opt.spec || /^Option-\d+$/i.test(opt.spec.trim()) || ['standard', 'default'].includes(opt.spec.trim().toLowerCase());
+      const cleanSpec = isPlaceholderSpec ? '' : opt.spec.trim();
+      const skuPart = cleanSpec ? cleanSpec.replace(/\s+/g, '') : `0${idx + 1}`;
+
+      return {
+        id: opt.id || `v_${Date.now()}_${idx}`,
+        spec: cleanSpec,
+        sku: `${finalBrand.substring(0, 3)}-${skuPart}`,
+        purchasePrice: Number(opt.purchasePrice || 0),
+        sellingPrice: Number(opt.sellingPrice || 0),
+        stock: Number(opt.stock || 0),
+        reorderLevel: Number(opt.reorderLevel || 5)
+      };
+    });
 
     updateProduct(editingProduct.id, {
       nameBn: prodNameBn,
@@ -1138,8 +1150,10 @@ export const Inventory = () => {
                           const isLow = varItem.stock <= varItem.reorderLevel;
                           return (
                             <tr key={varItem.id}>
-                              <td style={{ fontWeight: 600, color: '#06b6d4' }}>
-                                {varItem.spec}
+                              <td style={{ fontWeight: 600, color: varItem.spec ? '#06b6d4' : '#94a3b8' }}>
+                                {varItem.spec && !/^Option-\d+$/i.test(varItem.spec.trim()) && varItem.spec.trim().toLowerCase() !== 'standard'
+                                  ? varItem.spec
+                                  : (isBn ? 'মূল পণ্য (স্ট্যান্ডার্ড)' : 'Standard / Base')}
                               </td>
 
                               <td style={{ fontSize: '0.825rem', color: '#94a3b8' }}>
