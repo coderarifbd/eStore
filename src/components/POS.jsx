@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../context/StoreContext';
 import { AutocompleteSearch } from './AutocompleteSearch';
 import { 
@@ -13,9 +13,125 @@ import {
   FileText,
   Edit3,
   Eye,
-  Save
+  Save,
+  ChevronDown,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+const SearchableBrandSelect = ({ brands = [], value, onChange, isBn }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredBrands = brands.filter(b => {
+    if (!search.trim()) return true;
+    return b.toLowerCase().includes(search.toLowerCase());
+  });
+
+  return (
+    <div ref={dropdownRef} style={{ position: 'relative', minWidth: '170px' }}>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          padding: '0.4rem 0.75rem',
+          backgroundColor: value !== 'ALL' ? 'rgba(139, 92, 246, 0.2)' : '#0f172a',
+          border: value !== 'ALL' ? '1px solid #8b5cf6' : '1px solid #334155',
+          borderRadius: '8px',
+          color: value !== 'ALL' ? '#c084fc' : '#f8fafc',
+          fontWeight: value !== 'ALL' ? 700 : 500,
+          fontSize: '0.85rem',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justify: 'space-between',
+          gap: '0.5rem'
+        }}
+      >
+        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>
+          {value === 'ALL' ? (isBn ? '-- সকল ব্র্যান্ড --' : '-- All Brands --') : value}
+        </span>
+        <ChevronDown size={16} color="#94a3b8" />
+      </div>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            right: 0,
+            width: '220px',
+            backgroundColor: '#0f172a',
+            border: '1px solid #8b5cf6',
+            borderRadius: '8px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.6)',
+            zIndex: 9999,
+            padding: '6px'
+          }}
+        >
+          {/* Search Bar inside Brand Selector */}
+          <div style={{ padding: '4px 6px 8px 6px', borderBottom: '1px solid #1e293b', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Search size={14} color="#8b5cf6" />
+            <input
+              type="text"
+              autoFocus
+              placeholder={isBn ? 'ব্র্যান্ড খুঁজুন...' : 'Search brand...'}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: '100%', background: 'none', border: 'none', color: '#f8fafc', fontSize: '0.825rem', outline: 'none' }}
+            />
+            {search && <X size={14} color="#94a3b8" onClick={() => setSearch('')} style={{ cursor: 'pointer' }} />}
+          </div>
+
+          <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div
+              onClick={() => { onChange('ALL'); setIsOpen(false); }}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                backgroundColor: value === 'ALL' ? 'rgba(139, 92, 246, 0.25)' : 'transparent',
+                color: value === 'ALL' ? '#c084fc' : '#94a3b8',
+                fontSize: '0.85rem',
+                fontWeight: value === 'ALL' ? 700 : 500
+              }}
+            >
+              {isBn ? '-- সকল ব্র্যান্ড --' : '-- All Brands --'}
+            </div>
+
+            {filteredBrands.map(b => (
+              <div
+                key={b}
+                onClick={() => { onChange(b); setIsOpen(false); }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  backgroundColor: value === b ? 'rgba(139, 92, 246, 0.25)' : 'transparent',
+                  color: value === b ? '#c084fc' : '#e2e8f0',
+                  fontSize: '0.85rem',
+                  fontWeight: value === b ? 700 : 500
+                }}
+              >
+                {b}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const POS = () => {
   const { lang, sales, brands, addSale, updateSale, deleteSale, setPrintDoc, showConfirm } = useStore();
@@ -297,26 +413,12 @@ export const POS = () => {
                   <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>
                     {isBn ? 'ব্র্যান্ড সিলেক্ট:' : 'Select Brand:'}
                   </label>
-                  <select
-                    className="select-control"
+                  <SearchableBrandSelect
+                    brands={brands}
                     value={selectedBrandFilter}
-                    onChange={(e) => setSelectedBrandFilter(e.target.value)}
-                    style={{
-                      padding: '0.35rem 0.65rem',
-                      fontSize: '0.85rem',
-                      backgroundColor: selectedBrandFilter !== 'ALL' ? 'rgba(139, 92, 246, 0.2)' : '#0f172a',
-                      borderColor: selectedBrandFilter !== 'ALL' ? '#8b5cf6' : '#334155',
-                      color: selectedBrandFilter !== 'ALL' ? '#c084fc' : '#f8fafc',
-                      fontWeight: selectedBrandFilter !== 'ALL' ? 700 : 500,
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value="ALL">{isBn ? '-- সকল ব্র্যান্ড --' : '-- All Brands --'}</option>
-                    {(brands || []).map(b => (
-                      <option key={b} value={b}>{b}</option>
-                    ))}
-                  </select>
+                    onChange={setSelectedBrandFilter}
+                    isBn={isBn}
+                  />
                 </div>
               </div>
 

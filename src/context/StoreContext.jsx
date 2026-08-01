@@ -421,17 +421,24 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
         const cleanSpec = isStandardSpec ? '' : rawSpec.trim();
 
         if (bList.length > 1) {
-          bList.forEach(b => {
+          // Check if cleanSpec is explicitly prefixed with a specific brand (e.g. "ERICSON - Switch")
+          const matchedBrand = bList.find(b => {
+            const bLower = b.toLowerCase();
+            const specLower = cleanSpec.toLowerCase();
+            return specLower.startsWith(`${bLower} -`) || specLower.startsWith(`${bLower}:`) || specLower === bLower;
+          });
+
+          if (matchedBrand) {
             const specSegment = cleanSpec ? ` - ${cleanSpec}` : '';
-            const brandSegment = b ? ` (${b})` : '';
+            const brandSegment = matchedBrand ? ` (${matchedBrand})` : '';
 
             list.push({
               productId: p.id,
-              variantId: `${v.id}_${b}`,
+              variantId: `${v.id}_${matchedBrand}`,
               rawVariantId: v.id,
               productNameBn: p.nameBn,
               productNameEn: p.nameEn,
-              brand: b,
+              brand: matchedBrand,
               categoryNameBn: cat ? cat.nameBn : '',
               unit: p.unit,
               spec: cleanSpec,
@@ -445,7 +452,33 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
               batches: v.batches || [],
               displayName: `${p.nameBn}${specSegment}${brandSegment}${attrStr ? ` (${attrStr})` : ''}`
             });
-          });
+          } else {
+            bList.forEach(b => {
+              const specSegment = cleanSpec ? ` - ${cleanSpec}` : '';
+              const brandSegment = b ? ` (${b})` : '';
+
+              list.push({
+                productId: p.id,
+                variantId: `${v.id}_${b}`,
+                rawVariantId: v.id,
+                productNameBn: p.nameBn,
+                productNameEn: p.nameEn,
+                brand: b,
+                categoryNameBn: cat ? cat.nameBn : '',
+                unit: p.unit,
+                spec: cleanSpec,
+                attributes: v.attributes || [],
+                attrStr,
+                sku: v.sku,
+                purchasePrice: v.purchasePrice || 0,
+                sellingPrice: v.sellingPrice || 0,
+                stock: v.stock || 0,
+                reorderLevel: v.reorderLevel || 5,
+                batches: v.batches || [],
+                displayName: `${p.nameBn}${specSegment}${brandSegment}${attrStr ? ` (${attrStr})` : ''}`
+              });
+            });
+          }
         } else {
           const specSegment = cleanSpec ? ` - ${cleanSpec}` : '';
           const brandSegment = (bList[0] && bList[0] !== 'Unbranded') ? ` (${bList[0]})` : '';
