@@ -475,15 +475,11 @@ export const Inventory = () => {
   const [prodUnit, setProdUnit] = useState('Goj');
   
   // Multi-Group Variation Architecture
-  const [variationGroups, setVariationGroups] = useState([
-    { id: 1, name: 'তারের সাইজ (Cable Size)', values: '1.0 rm, 1.3 rm, 2.0 rm, 14/76' },
-    { id: 2, name: 'রং (Color)', values: 'লাল, কালো' }
-  ]);
+  const [variationGroups, setVariationGroups] = useState([]);
 
   // Options List
   const [variationOptions, setVariationOptions] = useState([
-    { spec: '1.0 rm - লাল', purchasePrice: 18, sellingPrice: 25, stock: 500, reorderLevel: 50 },
-    { spec: '1.0 rm - কালো', purchasePrice: 18, sellingPrice: 25, stock: 500, reorderLevel: 50 }
+    { spec: 'Standard', purchasePrice: 0, sellingPrice: '', stock: 0, reorderLevel: 5 }
   ]);
 
   const addVariationGroup = () => {
@@ -568,12 +564,21 @@ export const Inventory = () => {
     if (presetObj.categoryId) setProdCategory(presetObj.categoryId);
     if (presetObj.unit) setProdUnit(presetObj.unit);
 
+    if (presetObj.groups && presetObj.groups.length > 0) {
+      setVariationGroups(presetObj.groups);
+    } else if (presetObj.options && presetObj.options.length > 0) {
+      const optionSpecsStr = presetObj.options.map(o => o.spec).join(', ');
+      setVariationGroups([
+        { id: 1, name: presetObj.variationTypeName || (isBn ? 'টাইপ' : 'Type'), values: optionSpecsStr }
+      ]);
+    }
+
     if (presetObj.options && presetObj.options.length > 0) {
       setVariationOptions(presetObj.options.map(opt => ({
         spec: opt.spec || '',
-        purchasePrice: 0,
+        purchasePrice: opt.purchasePrice || 0,
         sellingPrice: opt.sellingPrice !== undefined ? opt.sellingPrice : '',
-        stock: 0,
+        stock: opt.stock || 0,
         reorderLevel: opt.reorderLevel || 5
       })));
     }
@@ -893,14 +898,11 @@ export const Inventory = () => {
   const resetForm = () => {
     setProdNameBn('');
     setProdBrands(brands[0] ? [brands[0]] : []);
-    setProdUnit('Goj');
-    setVariationGroups([
-      { id: 1, name: 'তারের সাইজ (Cable Size)', values: '1.0 rm, 1.3 rm, 2.0 rm, 14/76' },
-      { id: 2, name: 'রং (Color)', values: 'লাল, কালো' }
-    ]);
+    setProdCategory(categories[0]?.id || 'cat_cables');
+    setProdUnit('Pcs');
+    setVariationGroups([]);
     setVariationOptions([
-      { spec: '1.0 rm - লাল', purchasePrice: 0, sellingPrice: 25, stock: 0, reorderLevel: 50 },
-      { spec: '1.0 rm - কালো', purchasePrice: 0, sellingPrice: 25, stock: 0, reorderLevel: 50 }
+      { spec: 'Standard', purchasePrice: 0, sellingPrice: '', stock: 0, reorderLevel: 5 }
     ]);
   };
 
