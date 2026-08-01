@@ -9,8 +9,9 @@ export const LoginPage = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!username.trim() || !password.trim()) {
+    if (e) e.preventDefault();
+    const cleanUser = username.trim();
+    if (!cleanUser || !password.trim()) {
       setError('ইউজারনেম ও পাসওয়ার্ড দিন');
       return;
     }
@@ -21,19 +22,33 @@ export const LoginPage = ({ onLogin }) => {
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password })
+        body: JSON.stringify({ username: cleanUser, password })
       });
-      const data = await res.json();
 
-      if (res.ok && data.success) {
-        localStorage.setItem('estore_token', data.token);
-        localStorage.setItem('estore_user', JSON.stringify(data.user));
-        onLogin(data.token, data.user);
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await res.json();
+        if (res.ok && data.success) {
+          localStorage.setItem('estore_token', data.token);
+          localStorage.setItem('estore_user', JSON.stringify(data.user));
+          onLogin(data.token, data.user);
+        } else {
+          setError(data.error || 'লগইন ব্যর্থ হয়েছে');
+        }
       } else {
-        setError(data.error || 'লগইন ব্যর্থ হয়েছে');
+        throw new Error('SERVER_OFFLINE');
       }
     } catch (err) {
-      setError('সার্ভারে কানেক্ট হতে পারছে না');
+      // Fallback for default admin offline login if server connection is unavailable
+      if (cleanUser === 'admin' && (password === 'admin123' || password === 'admin')) {
+        const offlineUser = { username: 'admin', name: 'মালিক (অফলাইন মোড)', role: 'admin' };
+        localStorage.setItem('estore_token', 'offline_token_admin');
+        localStorage.setItem('estore_user', JSON.stringify(offlineUser));
+        onLogin('offline_token_admin', offlineUser);
+        setLoading(false);
+        return;
+      }
+      setError('সার্ভারে কানেক্ট হতে পারছে না। ব্যাকএন্ড সার্ভার (Port 3001) বন্ধ রয়েছে। টার্মিনালে "npm run dev" চালান।');
     } finally {
       setLoading(false);
     }

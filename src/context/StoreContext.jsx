@@ -330,30 +330,62 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
     const list = [];
     products.forEach(p => {
       const cat = categories.find(c => c.id === p.categoryId);
+      const bList = p.brand
+        ? p.brand.split(',').map(b => b.trim()).filter(Boolean)
+        : ['Unbranded'];
+
       (p.variants || []).forEach(v => {
         const attrStr = v.attributes && v.attributes.length > 0
           ? v.attributes.map(a => `${a.label}: ${a.value}`).join(', ')
           : '';
 
-        list.push({
-          productId: p.id,
-          variantId: v.id,
-          productNameBn: p.nameBn,
-          productNameEn: p.nameEn,
-          brand: p.brand,
-          categoryNameBn: cat ? cat.nameBn : '',
-          unit: p.unit,
-          spec: v.spec,
-          attributes: v.attributes || [],
-          attrStr,
-          sku: v.sku,
-          purchasePrice: v.purchasePrice || 0,
-          sellingPrice: v.sellingPrice || 0,
-          stock: v.stock || 0,
-          reorderLevel: v.reorderLevel || 5,
-          batches: v.batches || [],
-          displayName: `${p.nameBn} - ${v.spec} ${attrStr ? `(${attrStr})` : ''}`
-        });
+        if (bList.length > 1) {
+          bList.forEach(b => {
+            const hasBrandInSpec = v.spec.toLowerCase().includes(b.toLowerCase());
+            const displaySpec = hasBrandInSpec ? v.spec : v.spec;
+            list.push({
+              productId: p.id,
+              variantId: `${v.id}_${b}`,
+              rawVariantId: v.id,
+              productNameBn: p.nameBn,
+              productNameEn: p.nameEn,
+              brand: b,
+              categoryNameBn: cat ? cat.nameBn : '',
+              unit: p.unit,
+              spec: displaySpec,
+              attributes: v.attributes || [],
+              attrStr,
+              sku: v.sku,
+              purchasePrice: v.purchasePrice || 0,
+              sellingPrice: v.sellingPrice || 0,
+              stock: v.stock || 0,
+              reorderLevel: v.reorderLevel || 5,
+              batches: v.batches || [],
+              displayName: `${p.nameBn} - ${displaySpec} (${b}) ${attrStr ? `(${attrStr})` : ''}`
+            });
+          });
+        } else {
+          list.push({
+            productId: p.id,
+            variantId: v.id,
+            rawVariantId: v.id,
+            productNameBn: p.nameBn,
+            productNameEn: p.nameEn,
+            brand: bList[0] || p.brand || '',
+            categoryNameBn: cat ? cat.nameBn : '',
+            unit: p.unit,
+            spec: v.spec,
+            attributes: v.attributes || [],
+            attrStr,
+            sku: v.sku,
+            purchasePrice: v.purchasePrice || 0,
+            sellingPrice: v.sellingPrice || 0,
+            stock: v.stock || 0,
+            reorderLevel: v.reorderLevel || 5,
+            batches: v.batches || [],
+            displayName: `${p.nameBn} - ${v.spec} ${attrStr ? `(${attrStr})` : ''}`
+          });
+        }
       });
     });
     return list;
@@ -363,80 +395,107 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
     const saleId = `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const saleDate = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
-    const resolvedSaleItems = [];
+    // Map each cart item directly 1-to-1 to calculate cost & batch deduction without duplication
+    const resolvedSaleItems = (saleData.items || []).map(cartItem => {
+      let totalCostOfDeducted = 0;
+      const batchesDeducted = [];
+      let quantityToDeduct = cartItem.quantity || 1;
+
+      const prod = products.find(p => p.id === cartItem.productId);
+      if (prod) {
+        const varItem = (prod.variants || []).find(v => 
+          v.id === cartItem.variantId || 
+          (cartItem.variantId && cartItem.variantId.startsWith(`${v.id}_`)) ||
+          v.spec === cartItem.spec
+        );
+
+        if (varItem) {
+          const sortedBatches = [...(varItem.batches || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+          for (const batch of sortedBatches) {
+            if (quantityToDeduct <= 0) break;
+            if (batch.remainingQuantity > 0) {
+              const deductQty = Math.min(quantityToDeduct, batch.remainingQuantity);
+              quantityToDeduct -= deductQty;
+              totalCostOfDeducted += deductQty * (batch.purchasePrice || 0);
+              batchesDeducted.push({
+                batchId: batch.id,
+                purchaseVoucherId: batch.purchaseVoucherId,
+                quantity: deductQty,
+                purchasePrice: batch.purchasePrice || 0
+              });
+            }
+          }
+          if (quantityToDeduct > 0 && sortedBatches.length > 0) {
+            const lastBatch = sortedBatches[sortedBatches.length - 1];
+            totalCostOfDeducted += quantityToDeduct * (lastBatch.purchasePrice || 0);
+          }
+        }
+      }
+
+      const unitP = cartItem.unitPrice || cartItem.sellingPrice || 0;
+      const calculatedAverageCost = cartItem.quantity > 0 ? (totalCostOfDeducted / cartItem.quantity) : (cartItem.purchasePrice || 0);
+
+      return {
+        ...cartItem,
+        productName: cartItem.productName || cartItem.productNameBn || cartItem.productNameEn || '',
+        unitPrice: unitP,
+        totalPrice: unitP * (cartItem.quantity || 1),
+        purchasePrice: calculatedAverageCost,
+        batchesDeducted
+      };
+    });
 
     setProducts(prevProducts => {
       return prevProducts.map(prod => {
-        const matchingCartItems = saleData.items.filter(item => item.productId === prod.id);
+        const matchingCartItems = (saleData.items || []).filter(item => item.productId === prod.id);
         if (matchingCartItems.length === 0) return prod;
 
         const updatedVariants = prod.variants.map(varItem => {
-          const cartItem = matchingCartItems.find(item => item.variantId === varItem.id || item.spec === varItem.spec);
-          if (cartItem) {
-            let quantityToDeduct = cartItem.quantity;
-            let totalCostOfDeducted = 0;
-            const updatedBatches = [];
-            const batchesDeducted = [];
+          const matchingItems = matchingCartItems.filter(item => 
+            item.variantId === varItem.id || 
+            (item.variantId && item.variantId.startsWith(`${varItem.id}_`)) ||
+            item.spec === varItem.spec
+          );
 
-            // Sort batches by date to ensure FIFO (oldest first)
-            const sortedBatches = [...(varItem.batches || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+          if (matchingItems.length === 0) return varItem;
 
-            for (const batch of sortedBatches) {
-              if (quantityToDeduct <= 0) {
-                updatedBatches.push(batch);
-                continue;
-              }
+          let quantityToDeduct = matchingItems.reduce((sum, i) => sum + (i.quantity || 1), 0);
+          const updatedBatches = [];
+          const sortedBatches = [...(varItem.batches || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-              if (batch.remainingQuantity > 0) {
-                const deductFromThisBatch = Math.min(quantityToDeduct, batch.remainingQuantity);
-                quantityToDeduct -= deductFromThisBatch;
-                totalCostOfDeducted += deductFromThisBatch * batch.purchasePrice;
-
-                batchesDeducted.push({
-                  batchId: batch.id,
-                  purchaseVoucherId: batch.purchaseVoucherId,
-                  quantity: deductFromThisBatch,
-                  purchasePrice: batch.purchasePrice
-                });
-
-                updatedBatches.push({
-                  ...batch,
-                  remainingQuantity: batch.remainingQuantity - deductFromThisBatch
-                });
-              } else {
-                updatedBatches.push(batch);
-              }
+          for (const batch of sortedBatches) {
+            if (quantityToDeduct <= 0) {
+              updatedBatches.push(batch);
+              continue;
             }
 
-            // In case there is still quantity to deduct (oversold / negative stock allowed or safety)
-            if (quantityToDeduct > 0) {
-              if (updatedBatches.length > 0) {
-                const lastBatchIdx = updatedBatches.length - 1;
-                totalCostOfDeducted += quantityToDeduct * updatedBatches[lastBatchIdx].purchasePrice;
-                updatedBatches[lastBatchIdx] = {
-                  ...updatedBatches[lastBatchIdx],
-                  remainingQuantity: updatedBatches[lastBatchIdx].remainingQuantity - quantityToDeduct
-                };
-              }
+            if (batch.remainingQuantity > 0) {
+              const deductQty = Math.min(quantityToDeduct, batch.remainingQuantity);
+              quantityToDeduct -= deductQty;
+              updatedBatches.push({
+                ...batch,
+                remainingQuantity: batch.remainingQuantity - deductQty
+              });
+            } else {
+              updatedBatches.push(batch);
             }
+          }
 
-            const calculatedAverageCost = cartItem.quantity > 0 ? (totalCostOfDeducted / cartItem.quantity) : varItem.purchasePrice;
-
-            resolvedSaleItems.push({
-              ...cartItem,
-              purchasePrice: calculatedAverageCost,
-              batchesDeducted
-            });
-
-            const updatedStock = updatedBatches.reduce((sum, b) => sum + b.remainingQuantity, 0);
-
-            return {
-              ...varItem,
-              batches: updatedBatches,
-              stock: Math.max(0, updatedStock)
+          if (quantityToDeduct > 0 && updatedBatches.length > 0) {
+            const lastBatchIdx = updatedBatches.length - 1;
+            updatedBatches[lastBatchIdx] = {
+              ...updatedBatches[lastBatchIdx],
+              remainingQuantity: updatedBatches[lastBatchIdx].remainingQuantity - quantityToDeduct
             };
           }
-          return varItem;
+
+          const updatedStock = updatedBatches.reduce((sum, b) => sum + b.remainingQuantity, 0);
+
+          return {
+            ...varItem,
+            batches: updatedBatches,
+            stock: Math.max(0, updatedStock)
+          };
         });
 
         return { ...prod, variants: updatedVariants };

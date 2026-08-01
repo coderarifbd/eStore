@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { 
   Package, 
@@ -18,6 +18,212 @@ import {
   ListFilter,
   LayoutGrid
 } from 'lucide-react';
+
+const MultiSelectBrandDropdown = ({ brands = [], selectedBrands = [], onChange, isBn }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggleBrand = (bName) => {
+    if (selectedBrands.includes(bName)) {
+      onChange(selectedBrands.filter(b => b !== bName));
+    } else {
+      onChange([...selectedBrands, bName]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedBrands.length === brands.length) {
+      onChange([]);
+    } else {
+      onChange([...brands]);
+    }
+  };
+
+  return (
+    <div ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
+      {/* Trigger Box */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          minHeight: '42px',
+          padding: '6px 12px',
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          border: isOpen ? '1px solid #06b6d4' : '1px solid #334155',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          transition: 'border-color 0.2s',
+          boxSizing: 'border-box'
+        }}
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+          {selectedBrands.length === 0 ? (
+            <span style={{ color: '#64748b', fontSize: '0.9rem' }}>
+              {isBn ? 'ব্র্যান্ড সিলেক্ট করুন...' : 'Select Brands...'}
+            </span>
+          ) : (
+            selectedBrands.map(b => (
+              <span
+                key={b}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  backgroundColor: 'rgba(6, 182, 212, 0.18)',
+                  color: '#06b6d4',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  fontSize: '0.825rem',
+                  fontWeight: 600
+                }}
+              >
+                {b}
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleBrand(b);
+                  }}
+                  style={{
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    lineHeight: 1,
+                    marginLeft: '3px',
+                    color: '#f87171',
+                    fontWeight: 700
+                  }}
+                  title={isBn ? 'রিমুভ' : 'Remove'}
+                >
+                  ✕
+                </span>
+              </span>
+            ))
+          )}
+        </div>
+        <ChevronDown size={18} style={{ color: '#94a3b8', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
+      </div>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            backgroundColor: '#1e293b',
+            border: '1px solid #334155',
+            borderRadius: '10px',
+            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.6)',
+            padding: '8px',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}
+        >
+          {/* Header Action */}
+          <div style={{
+            display: 'flex',
+            justify: 'space-between',
+            alignItems: 'center',
+            padding: '4px 6px 8px 6px',
+            borderBottom: '1px solid #334155',
+            marginBottom: '6px',
+            fontSize: '0.8rem'
+          }}>
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              style={{ background: 'none', border: 'none', color: '#06b6d4', cursor: 'pointer', fontWeight: 600, padding: 0 }}
+            >
+              {selectedBrands.length === brands.length
+                ? (isBn ? 'সব ডিলিট' : 'Clear All')
+                : (isBn ? 'সব সিলেক্ট' : 'Select All')}
+            </button>
+            <span style={{ color: '#64748b' }}>
+              {selectedBrands.length} / {brands.length} {isBn ? 'বাছাই' : 'selected'}
+            </span>
+          </div>
+
+          {/* Brand Items Scrollable List */}
+          <div style={{
+            maxHeight: '180px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '3px',
+            paddingRight: '2px'
+          }}>
+            {brands.length === 0 ? (
+              <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                {isBn ? 'ব্র্যান্ড মেনু থেকে ব্র্যান্ড যোগ করুন' : 'No brands available in Brand Menu'}
+              </div>
+            ) : (
+              brands.map(b => {
+                const isSelected = selectedBrands.includes(b);
+                return (
+                  <div
+                    key={b}
+                    onClick={() => toggleBrand(b)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
+                      color: isSelected ? '#38bdf8' : '#f8fafc',
+                      fontSize: '0.875rem',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; }}
+                    onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  >
+                    <span style={{ fontWeight: isSelected ? 600 : 400, flex: 1, textAlign: 'left' }}>
+                      {b}
+                    </span>
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '5px',
+                      border: isSelected ? '1.5px solid #06b6d4' : '1.5px solid #475569',
+                      backgroundColor: isSelected ? '#06b6d4' : 'rgba(15, 23, 42, 0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      marginLeft: '12px',
+                      flexShrink: 0,
+                      transition: 'all 0.15s ease'
+                    }}>
+                      {isSelected ? '✓' : ''}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Inventory = () => {
   const { 
@@ -70,9 +276,7 @@ export const Inventory = () => {
 
   // Form states for Product Add/Edit
   const [prodNameBn, setProdNameBn] = useState('');
-  const [prodBrand, setProdBrand] = useState(brands[0] || 'Super Star');
-  const [isCustomBrand, setIsCustomBrand] = useState(false);
-  const [customBrandText, setCustomBrandText] = useState('');
+  const [prodBrands, setProdBrands] = useState(brands[0] ? [brands[0]] : []);
   const [prodCategory, setProdCategory] = useState(categories[0]?.id || 'cat_cables');
   const [prodUnit, setProdUnit] = useState('Goj');
   
@@ -118,8 +322,19 @@ export const Inventory = () => {
       return;
     }
 
+    let allGroups = [...validGroups];
+    if (prodBrands.length > 1) {
+      const hasBrandGroup = validGroups.some(g => g.name.toLowerCase().includes('brand') || g.name.toLowerCase().includes('ব্র্যান্ড'));
+      if (!hasBrandGroup) {
+        allGroups = [
+          { name: isBn ? 'ব্র্যান্ড' : 'Brand', vals: prodBrands },
+          ...validGroups
+        ];
+      }
+    }
+
     let combinations = [[]];
-    validGroups.forEach(group => {
+    allGroups.forEach(group => {
       const nextCombos = [];
       combinations.forEach(existingCombo => {
         group.vals.forEach(val => {
@@ -206,13 +421,13 @@ export const Inventory = () => {
   // Filter products
   const filteredProducts = products.filter(p => {
     const matchesCat = selectedCategory === 'ALL' || p.categoryId === selectedCategory;
-    const matchesBrand = selectedBrand === 'ALL' || p.brand === selectedBrand;
+    const matchesBrand = selectedBrand === 'ALL' || (p.brand && p.brand.split(',').map(b => b.trim()).includes(selectedBrand));
     
     const q = searchQuery.toLowerCase();
     const matchesQuery = !q || (
       p.nameBn.toLowerCase().includes(q) ||
       p.nameEn.toLowerCase().includes(q) ||
-      p.brand.toLowerCase().includes(q) ||
+      (p.brand && p.brand.toLowerCase().includes(q)) ||
       (p.variationTypeName && p.variationTypeName.toLowerCase().includes(q)) ||
       (p.variants || []).some(v => 
         v.spec.toLowerCase().includes(q) || 
@@ -227,11 +442,7 @@ export const Inventory = () => {
     e.preventDefault();
     if (!prodNameBn) return;
 
-    let finalBrand = prodBrand;
-    if (isCustomBrand && customBrandText.trim()) {
-      finalBrand = customBrandText.trim();
-      addBrand(finalBrand);
-    }
+    const finalBrand = prodBrands.length > 0 ? prodBrands.join(', ') : (brands[0] || 'Unbranded');
 
     const groupNamesStr = variationGroups.map(g => g.name).join(' + ');
 
@@ -265,9 +476,10 @@ export const Inventory = () => {
     setEditingProduct(prod);
     setProdNameBn(prod.nameBn);
     setProdCategory(prod.categoryId);
-    setProdBrand(prod.brand);
-    setIsCustomBrand(false);
-    setCustomBrandText('');
+    const bArray = prod.brand
+      ? prod.brand.split(',').map(b => b.trim()).filter(Boolean)
+      : (brands[0] ? [brands[0]] : []);
+    setProdBrands(bArray);
     setProdUnit(prod.unit || 'Goj');
     
     setVariationGroups([
@@ -291,11 +503,7 @@ export const Inventory = () => {
     e.preventDefault();
     if (!editingProduct || !prodNameBn) return;
 
-    let finalBrand = prodBrand;
-    if (isCustomBrand && customBrandText.trim()) {
-      finalBrand = customBrandText.trim();
-      addBrand(finalBrand);
-    }
+    const finalBrand = prodBrands.length > 0 ? prodBrands.join(', ') : (brands[0] || 'Unbranded');
 
     const groupNamesStr = variationGroups.map(g => g.name).join(' + ');
 
@@ -373,9 +581,7 @@ export const Inventory = () => {
 
   const resetForm = () => {
     setProdNameBn('');
-    setProdBrand(brands[0] || 'Super Star');
-    setIsCustomBrand(false);
-    setCustomBrandText('');
+    setProdBrands(brands[0] ? [brands[0]] : []);
     setProdUnit('Goj');
     setVariationGroups([
       { id: 1, name: 'তারের সাইজ (Cable Size)', values: '1.0 rm, 1.3 rm, 2.0 rm, 14/76' },
@@ -514,7 +720,9 @@ export const Inventory = () => {
 
                     <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <span>{isBn ? prod.nameBn : prod.nameEn}</span>
-                      <span className="badge badge-purple" style={{ fontSize: '0.75rem', padding: '1px 6px' }}>{prod.brand}</span>
+                      {(prod.brand || '').split(',').map(b => b.trim()).filter(Boolean).map((b, i) => (
+                        <span key={i} className="badge badge-purple" style={{ fontSize: '0.75rem', padding: '1px 6px' }}>{b}</span>
+                      ))}
                       
                       <span style={{ fontSize: '0.775rem', color: '#94a3b8', fontWeight: 400 }}>
                         • {isBn ? cat?.nameBn : cat?.nameEn}
@@ -796,39 +1004,13 @@ export const Inventory = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">{isBn ? 'ব্র্যান্ড নির্বাচন করুন' : 'Select Brand'}</label>
-                    {!isCustomBrand ? (
-                      <select
-                        className="select-control"
-                        value={prodBrand}
-                        onChange={(e) => {
-                          if (e.target.value === '__ADD_NEW__') {
-                            setIsCustomBrand(true);
-                          } else {
-                            setProdBrand(e.target.value);
-                          }
-                        }}
-                      >
-                        {brands.map(b => (
-                          <option key={b} value={b}>{b}</option>
-                        ))}
-                        <option value="__ADD_NEW__" style={{ fontWeight: 'bold', color: '#06b6d4' }}>
-                          + {isBn ? 'নতুন ব্র্যান্ড লিখুন...' : 'Add New Brand...'}
-                        </option>
-                      </select>
-                    ) : (
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <input
-                          type="text"
-                          required
-                          className="input-control"
-                          placeholder={isBn ? 'নতুন ব্র্যান্ড নাম...' : 'New Brand Name'}
-                          value={customBrandText}
-                          onChange={(e) => setCustomBrandText(e.target.value)}
-                        />
-                        <button type="button" onClick={() => setIsCustomBrand(false)} className="btn btn-secondary btn-sm">✕</button>
-                      </div>
-                    )}
+                    <label className="form-label">{isBn ? 'ব্র্যান্ড নির্বাচন করুন (একাধিক সম্ভব)' : 'Select Brand(s)'}</label>
+                    <MultiSelectBrandDropdown
+                      brands={brands}
+                      selectedBrands={prodBrands}
+                      onChange={setProdBrands}
+                      isBn={isBn}
+                    />
                   </div>
 
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -1029,39 +1211,13 @@ export const Inventory = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">{isBn ? 'ব্র্যান্ড নির্বাচন করুন' : 'Select Brand'}</label>
-                    {!isCustomBrand ? (
-                      <select
-                        className="select-control"
-                        value={prodBrand}
-                        onChange={(e) => {
-                          if (e.target.value === '__ADD_NEW__') {
-                            setIsCustomBrand(true);
-                          } else {
-                            setProdBrand(e.target.value);
-                          }
-                        }}
-                      >
-                        {brands.map(b => (
-                          <option key={b} value={b}>{b}</option>
-                        ))}
-                        <option value="__ADD_NEW__" style={{ fontWeight: 'bold', color: '#06b6d4' }}>
-                          + {isBn ? 'নতুন ব্র্যান্ড লিখুন...' : 'Add New Brand...'}
-                        </option>
-                      </select>
-                    ) : (
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <input
-                          type="text"
-                          required
-                          className="input-control"
-                          placeholder={isBn ? 'নতুন ব্র্যান্ড নাম...' : 'New Brand Name'}
-                          value={customBrandText}
-                          onChange={(e) => setCustomBrandText(e.target.value)}
-                        />
-                        <button type="button" onClick={() => setIsCustomBrand(false)} className="btn btn-secondary btn-sm">✕</button>
-                      </div>
-                    )}
+                    <label className="form-label">{isBn ? 'ব্র্যান্ড নির্বাচন করুন (একাধিক সম্ভব)' : 'Select Brand(s)'}</label>
+                    <MultiSelectBrandDropdown
+                      brands={brands}
+                      selectedBrands={prodBrands}
+                      onChange={setProdBrands}
+                      isBn={isBn}
+                    />
                   </div>
 
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>

@@ -98,15 +98,24 @@ export const PurchaseVoucher = () => {
     const prod = products.find(p => p.id === selectedProdId);
     if (!prod) return;
 
-    const variant = prod.variants.find(v => v.id === selectedVarId);
+    let realVarId = selectedVarId;
+    let selectedBrandName = prod.brand;
+
+    if (selectedVarId.includes('__BRAND__')) {
+      const parts = selectedVarId.split('__BRAND__');
+      realVarId = parts[0];
+      selectedBrandName = parts[1];
+    }
+
+    const variant = prod.variants.find(v => v.id === realVarId);
     if (!variant) return;
 
     addItemToVoucher({
       productId: prod.id,
-      variantId: variant.id,
+      variantId: selectedVarId.includes('__BRAND__') ? `${variant.id}_${selectedBrandName}` : variant.id,
       productNameBn: prod.nameBn,
       productNameEn: prod.nameEn,
-      brand: prod.brand,
+      brand: selectedBrandName,
       spec: variant.spec,
       unit: prod.unit,
       purchasePrice: Number(purchaseRate || variant.purchasePrice || 0),
@@ -194,7 +203,16 @@ export const PurchaseVoucher = () => {
     const prod = products.find(p => p.id === editModalProdId);
     if (!prod) return;
 
-    const variant = prod.variants.find(v => v.id === editModalVarId);
+    let realVarId = editModalVarId;
+    let selectedBrandName = prod.brand;
+
+    if (editModalVarId.includes('__BRAND__')) {
+      const parts = editModalVarId.split('__BRAND__');
+      realVarId = parts[0];
+      selectedBrandName = parts[1];
+    }
+
+    const variant = prod.variants.find(v => v.id === realVarId);
     if (!variant) return;
 
     const qty = Number(editModalQty || 1);
@@ -203,9 +221,9 @@ export const PurchaseVoucher = () => {
 
     const newItem = {
       productId: prod.id,
-      variantId: variant.id,
+      variantId: editModalVarId.includes('__BRAND__') ? `${variant.id}_${selectedBrandName}` : variant.id,
       productName: isBn ? prod.nameBn : prod.nameEn,
-      brand: prod.brand,
+      brand: selectedBrandName,
       spec: variant.spec,
       unit: prod.unit,
       quantity: qty,
@@ -469,7 +487,7 @@ export const PurchaseVoucher = () => {
                   >
                     <option value="">{isBn ? '-- পণ্য নির্বাচন করুন --' : '-- Select Product --'}</option>
                     {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.nameBn} ({p.brand})</option>
+                      <option key={p.id} value={p.id}>{p.nameBn}</option>
                     ))}
                   </select>
                 </div>
@@ -482,8 +500,13 @@ export const PurchaseVoucher = () => {
                     value={selectedVarId}
                     disabled={!selectedProdId}
                     onChange={(e) => {
-                      setSelectedVarId(e.target.value);
-                      const v = activeProduct?.variants.find(varObj => varObj.id === e.target.value);
+                      const val = e.target.value;
+                      setSelectedVarId(val);
+                      let realVarId = val;
+                      if (val.includes('__BRAND__')) {
+                        realVarId = val.split('__BRAND__')[0];
+                      }
+                      const v = activeProduct?.variants.find(varObj => varObj.id === realVarId);
                       if (v) {
                         setPurchaseRate(v.purchasePrice || '');
                         setSellingRate(v.sellingPrice || '');
@@ -491,11 +514,38 @@ export const PurchaseVoucher = () => {
                     }}
                   >
                     <option value="">{isBn ? '-- ভেরিয়েন্ট সাইজ বা ওয়াট --' : '-- Select Variant Spec --'}</option>
-                    {activeProduct?.variants.map(v => (
-                      <option key={v.id} value={v.id}>
-                        {v.spec} (কিনা: ৳{v.purchasePrice || 0} • বিক্রি: ৳{v.sellingPrice || 0})
-                      </option>
-                    ))}
+                    {(() => {
+                      if (!activeProduct || !activeProduct.variants) return null;
+                      const brandList = activeProduct.brand
+                        ? activeProduct.brand.split(',').map(b => b.trim()).filter(Boolean)
+                        : [];
+
+                      const options = [];
+                      if (brandList.length > 0) {
+                        brandList.forEach(b => {
+                          activeProduct.variants.forEach(v => {
+                            const hasBrandInSpec = v.spec.toLowerCase().includes(b.toLowerCase());
+                            const displaySpec = hasBrandInSpec ? v.spec : `${v.spec} (${b})`;
+                            const optionValue = hasBrandInSpec ? v.id : `${v.id}__BRAND__${b}`;
+                            options.push(
+                              <option key={`${b}_${v.id}`} value={optionValue}>
+                                {displaySpec} (কিনা: ৳{v.purchasePrice || 0} • বিক্রি: ৳{v.sellingPrice || 0})
+                              </option>
+                            );
+                          });
+                        });
+                      } else {
+                        activeProduct.variants.forEach(v => {
+                          options.push(
+                            <option key={v.id} value={v.id}>
+                              {v.spec} (কিনা: ৳{v.purchasePrice || 0} • বিক্রি: ৳{v.sellingPrice || 0})
+                            </option>
+                          );
+                        });
+                      }
+
+                      return options;
+                    })()}
                   </select>
                 </div>
 
@@ -1030,7 +1080,7 @@ export const PurchaseVoucher = () => {
                     >
                       <option value="">{isBn ? '-- পণ্য --' : '-- Product --'}</option>
                       {products.map(p => (
-                        <option key={p.id} value={p.id}>{p.nameBn} ({p.brand})</option>
+                        <option key={p.id} value={p.id}>{p.nameBn}</option>
                       ))}
                     </select>
 
@@ -1039,8 +1089,13 @@ export const PurchaseVoucher = () => {
                       value={editModalVarId}
                       disabled={!editModalProdId}
                       onChange={(e) => {
-                        setEditModalVarId(e.target.value);
-                        const v = activeEditModalProduct?.variants.find(varObj => varObj.id === e.target.value);
+                        const val = e.target.value;
+                        setEditModalVarId(val);
+                        let realVarId = val;
+                        if (val.includes('__BRAND__')) {
+                          realVarId = val.split('__BRAND__')[0];
+                        }
+                        const v = activeEditModalProduct?.variants.find(varObj => varObj.id === realVarId);
                         if (v) {
                           setEditModalRate(v.purchasePrice || '');
                           setEditModalSellingRate(v.sellingPrice || '');
@@ -1049,9 +1104,37 @@ export const PurchaseVoucher = () => {
                       style={{ padding: '0.4rem', fontSize: '0.85rem' }}
                     >
                       <option value="">{isBn ? '-- ভেরিয়েন্ট সাইজ --' : '-- Spec --'}</option>
-                      {activeEditModalProduct?.variants.map(v => (
-                        <option key={v.id} value={v.id}>{v.spec} (৳{v.purchasePrice})</option>
-                      ))}
+                      {(() => {
+                        if (!activeEditModalProduct || !activeEditModalProduct.variants) return null;
+                        const brandList = activeEditModalProduct.brand
+                          ? activeEditModalProduct.brand.split(',').map(b => b.trim()).filter(Boolean)
+                          : [];
+
+                        const options = [];
+                        if (brandList.length > 0) {
+                          brandList.forEach(b => {
+                            activeEditModalProduct.variants.forEach(v => {
+                              const hasBrandInSpec = v.spec.toLowerCase().includes(b.toLowerCase());
+                              const displaySpec = hasBrandInSpec ? v.spec : `${v.spec} (${b})`;
+                              const optionValue = hasBrandInSpec ? v.id : `${v.id}__BRAND__${b}`;
+                              options.push(
+                                <option key={`${b}_${v.id}`} value={optionValue}>
+                                  {displaySpec} (৳{v.purchasePrice})
+                                </option>
+                              );
+                            });
+                          });
+                        } else {
+                          activeEditModalProduct.variants.forEach(v => {
+                            options.push(
+                              <option key={v.id} value={v.id}>
+                                {v.spec} (৳{v.purchasePrice})
+                              </option>
+                            );
+                          });
+                        }
+                        return options;
+                      })()}
                     </select>
 
                     <input

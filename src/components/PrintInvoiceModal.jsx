@@ -112,11 +112,11 @@ export const PrintInvoiceModal = () => {
                     <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
                       <td style={{ padding: '6px' }}>{idx + 1}</td>
                       <td style={{ padding: '6px' }}>
-                        <strong>{item.productName}</strong> - {item.spec} ({item.brand})
+                        <strong>{item.productName || item.productNameBn || item.productNameEn}</strong> - {item.spec} ({item.brand})
                       </td>
-                      <td style={{ padding: '6px', textAlign: 'center' }}>{item.quantity} {item.unit === 'Goj' ? 'গজ' : item.unit}</td>
+                      <td style={{ padding: '6px', textAlign: 'center' }}>{item.quantity} {item.unit === 'Goj' ? 'গজ' : (item.unit || 'Pcs')}</td>
                       <td style={{ padding: '6px', textAlign: 'right' }}>৳{item.unitPrice}</td>
-                      <td style={{ padding: '6px', textAlign: 'right', fontWeight: 600 }}>৳{item.totalPrice}</td>
+                      <td style={{ padding: '6px', textAlign: 'right', fontWeight: 600 }}>৳{item.totalPrice || (item.unitPrice * item.quantity)}</td>
                     </tr>
                   ))}
                 </tbody>
