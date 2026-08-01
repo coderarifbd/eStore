@@ -649,7 +649,7 @@ export const PurchaseVoucher = () => {
                     options={products.map(p => ({
                       value: p.id,
                       label: p.nameBn,
-                      subText: p.brand ? `(${p.brand})` : ''
+                      subText: p.brand ? (p.brand.includes(',') ? `(${p.brand.split(',')[0]}...)` : `(${p.brand})`) : ''
                     }))}
                     value={selectedProdId}
                     isBn={isBn}
@@ -778,9 +778,9 @@ export const PurchaseVoucher = () => {
                             <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
                               {isBn ? item.productNameBn : item.productNameEn}
                             </div>
-                            <div style={{ fontSize: '0.775rem', color: '#8b5cf6' }}>
-                              {item.brand} • <strong style={{ color: '#06b6d4' }}>{item.spec}</strong>
-                            </div>
+                             <div style={{ fontSize: '0.775rem', color: '#06b6d4', fontWeight: 600 }}>
+                               {item.spec || (isBn ? 'মূল পণ্য' : 'Standard Product')}
+                             </div>
                           </td>
 
                           <td>
@@ -1149,7 +1149,7 @@ export const PurchaseVoucher = () => {
                       <tr key={idx}>
                         <td>{idx + 1}</td>
                         <td style={{ fontWeight: 600 }}>
-                          {item.productName} - {item.spec} ({item.brand})
+                          {item.productName}{item.spec ? ` - ${item.spec}` : ''}
                         </td>
                         <td>{item.quantity} {item.unit === 'Goj' ? 'গজ' : item.unit}</td>
                         <td>৳{item.unitPrice}</td>
@@ -1227,7 +1227,7 @@ export const PurchaseVoucher = () => {
                       options={products.map(p => ({
                         value: p.id,
                         label: p.nameBn,
-                        subText: p.brand ? `(${p.brand})` : ''
+                        subText: p.brand ? (p.brand.includes(',') ? `(${p.brand.split(',')[0]}...)` : `(${p.brand})`) : ''
                       }))}
                       value={editModalProdId}
                       isBn={isBn}
@@ -1336,8 +1336,8 @@ export const PurchaseVoucher = () => {
                               <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
                                 {item.productName}
                               </div>
-                              <div style={{ fontSize: '0.775rem', color: '#06b6d4' }}>
-                                {item.spec} ({item.brand})
+                              <div style={{ fontSize: '0.775rem', color: '#06b6d4', fontWeight: 600 }}>
+                                {item.spec || (isBn ? 'মূল পণ্য' : 'Standard Product')}
                               </div>
                             </td>
 
