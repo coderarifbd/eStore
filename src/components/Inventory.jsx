@@ -611,12 +611,24 @@ export const Inventory = () => {
     const finalBrand = prodBrands.length > 0 ? prodBrands.join(', ') : (brands[0] || 'Unbranded');
     const groupNamesStr = variationGroups.map(g => g.name).join(' + ');
 
-    // Ensure all selected brands have variation options generated
-    let finalVariationOptions = [...variationOptions];
+    // 1. Filter variationOptions so ONLY variations matching currently selected prodBrands exist!
+    let finalVariationOptions = variationOptions.filter(opt => {
+      const parts = opt.spec.split(/\s*[-–—:]\s*/);
+      if (parts.length > 1) {
+        const optBrand = parts[0].trim();
+        const isKnownBrand = brands.some(b => b.toLowerCase() === optBrand.toLowerCase());
+        if (isKnownBrand && !prodBrands.some(pb => pb.toLowerCase() === optBrand.toLowerCase())) {
+          return false; // Remove deselected brand variations!
+        }
+      }
+      return true;
+    });
+
+    // 2. Ensure all selected brands have variation options generated
     if (prodBrands.length > 0) {
       const cleanSpecsSet = new Set();
       const allKnownBrands = [...brands, ...prodBrands];
-      variationOptions.forEach(opt => {
+      finalVariationOptions.forEach(opt => {
         const baseSpec = extractBaseSpec(opt.spec, allKnownBrands);
         if (baseSpec) cleanSpecsSet.add(baseSpec);
       });
