@@ -19,6 +19,34 @@ import {
   LayoutGrid
 } from 'lucide-react';
 
+const extractBaseSpec = (spec = '', brandList = []) => {
+  if (!spec) return '';
+  const trimmedSpec = spec.trim();
+
+  // 1. Try splitting by hyphen or colon
+  const parts = trimmedSpec.split(/\s*[-–—:]\s*/);
+  if (parts.length > 1) {
+    const possibleBrand = parts[0].trim().toLowerCase();
+    const isBrand = brandList.some(b => b.trim().toLowerCase() === possibleBrand);
+    if (isBrand) {
+      return parts.slice(1).join(' - ').trim();
+    }
+  }
+
+  // 2. If no hyphen split match with known brand, try removing known brand prefixes safely
+  for (const b of brandList) {
+    if (b && b.trim()) {
+      const bLower = b.trim().toLowerCase();
+      if (trimmedSpec.toLowerCase().startsWith(bLower)) {
+        const rest = trimmedSpec.substring(b.trim().length).replace(/^[\s\-–—:]+/, '').trim();
+        if (rest) return rest;
+      }
+    }
+  }
+
+  return trimmedSpec;
+};
+
 const MultiSelectBrandDropdown = ({ brands = [], selectedBrands = [], onChange, isBn }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -474,33 +502,27 @@ export const Inventory = () => {
 
   // Handler when brands are added/removed in Select Brand(s)
   const handleProdBrandsChange = (newBrands) => {
-    // Find newly added brands
     const addedBrands = newBrands.filter(b => !prodBrands.includes(b));
     setProdBrands(newBrands);
 
     if (addedBrands.length > 0) {
       const cleanSpecsSet = new Set();
+      const allKnownBrands = [...brands, ...newBrands, ...prodBrands];
 
       // 1. From variationGroups
       variationGroups.forEach(grp => {
         if (grp.values) {
           grp.values.split(',').forEach(val => {
-            let s = val.trim();
-            newBrands.forEach(b => {
-              s = s.replace(new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i'), '');
-            });
-            if (s.trim()) cleanSpecsSet.add(s.trim());
+            const baseSpec = extractBaseSpec(val, allKnownBrands);
+            if (baseSpec) cleanSpecsSet.add(baseSpec);
           });
         }
       });
 
       // 2. From variationOptions
       variationOptions.forEach(opt => {
-        let s = opt.spec || '';
-        newBrands.forEach(b => {
-          s = s.replace(new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i'), '');
-        });
-        if (s.trim()) cleanSpecsSet.add(s.trim());
+        const baseSpec = extractBaseSpec(opt.spec, allKnownBrands);
+        if (baseSpec) cleanSpecsSet.add(baseSpec);
       });
 
       const baseSpecs = Array.from(cleanSpecsSet);
@@ -542,21 +564,16 @@ export const Inventory = () => {
     
     // Cleanly extract base specs without brand prefix for Group Values
     const cleanSpecsSet = new Set();
+    const allKnownBrands = [...brands, ...bArray];
     (prod.variants || []).forEach(v => {
-      let cleanSpec = v.spec || '';
-      bArray.forEach(b => {
-        const regex = new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i');
-        cleanSpec = cleanSpec.replace(regex, '');
-      });
-      if (cleanSpec.trim()) {
-        cleanSpecsSet.add(cleanSpec.trim());
-      }
+      const baseSpec = extractBaseSpec(v.spec, allKnownBrands);
+      if (baseSpec) cleanSpecsSet.add(baseSpec);
     });
 
     const cleanValues = Array.from(cleanSpecsSet).join(', ');
 
     setVariationGroups([
-      { id: 1, name: prod.variationTypeName || (isBn ? 'টাইপ' : 'Type'), values: cleanValues || '' }
+      { id: 1, name: prod.variationTypeName || (isBn ? 'টাইপ' : 'Type'), values: cleanValues }
     ]);
     
     setVariationOptions((prod.variants || []).map(v => ({
@@ -583,12 +600,10 @@ export const Inventory = () => {
     let finalVariationOptions = [...variationOptions];
     if (prodBrands.length > 0) {
       const cleanSpecsSet = new Set();
+      const allKnownBrands = [...brands, ...prodBrands];
       variationOptions.forEach(opt => {
-        let s = opt.spec || '';
-        prodBrands.forEach(b => {
-          s = s.replace(new RegExp(`^${b}\\s*[-–—:]\\s*`, 'i'), '');
-        });
-        if (s.trim()) cleanSpecsSet.add(s.trim());
+        const baseSpec = extractBaseSpec(opt.spec, allKnownBrands);
+        if (baseSpec) cleanSpecsSet.add(baseSpec);
       });
       const baseSpecs = Array.from(cleanSpecsSet);
 
