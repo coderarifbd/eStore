@@ -122,12 +122,33 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
     } catch { return INITIAL_CATEGORIES; }
   });
 
-  const [brands, setBrands] = useState(() => {
+  const cleanBrandList = (brandArray = []) => {
+    const uniqueSet = new Set();
+    (brandArray || []).forEach(item => {
+      if (typeof item === 'string') {
+        item.split(',').forEach(b => {
+          const trimmed = b.trim();
+          if (trimmed) uniqueSet.add(trimmed);
+        });
+      }
+    });
+    return Array.from(uniqueSet);
+  };
+
+  const [brands, _setBrandsRaw] = useState(() => {
     try {
       const saved = localStorage.getItem('elec_brands');
-      return saved ? JSON.parse(saved) : INITIAL_BRANDS;
-    } catch { return INITIAL_BRANDS; }
+      const loaded = saved ? JSON.parse(saved) : INITIAL_BRANDS;
+      return cleanBrandList(loaded);
+    } catch { return cleanBrandList(INITIAL_BRANDS); }
   });
+
+  const setBrands = (valueOrFn) => {
+    _setBrandsRaw(prev => {
+      const nextVal = typeof valueOrFn === 'function' ? valueOrFn(prev) : valueOrFn;
+      return cleanBrandList(nextVal);
+    });
+  };
 
   const [presets, setPresets] = useState(() => {
     try {
@@ -328,9 +349,20 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
 
   const addBrand = (newBrandName) => {
     const trimmed = newBrandName.trim();
-    if (trimmed && !brands.includes(trimmed)) {
-      setBrands(prev => [...prev, trimmed]);
-      return true;
+    if (trimmed) {
+      const individualBrands = trimmed.split(',').map(b => b.trim()).filter(Boolean);
+      let addedAny = false;
+      setBrands(prev => {
+        const next = [...prev];
+        individualBrands.forEach(b => {
+          if (!next.includes(b)) {
+            next.push(b);
+            addedAny = true;
+          }
+        });
+        return next;
+      });
+      return addedAny;
     }
     return false;
   };

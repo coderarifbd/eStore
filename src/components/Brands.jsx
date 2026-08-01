@@ -40,7 +40,9 @@ export const Brands = ({ setActiveTab }) => {
     }
   };
 
-  const filteredBrands = brands.filter(b => b.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredBrands = brands
+    .filter(b => b && !b.includes(','))
+    .filter(b => b.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -123,8 +125,13 @@ export const Brands = ({ setActiveTab }) => {
         /* GRID VIEW */
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.25rem' }}>
           {filteredBrands.map(bName => {
-            const brandProds = products.filter(p => p.brand === bName);
-            const totalVariants = brandProds.reduce((acc, p) => acc + (p.variants || []).length, 0);
+            const brandProds = products.filter(p => p.brand && p.brand.split(',').map(b => b.trim()).includes(bName));
+            const totalVariants = brandProds.reduce((acc, p) => {
+              const brandVars = (p.variants || []).filter(v => 
+                !p.brand || p.brand.split(',').length <= 1 || v.spec.toLowerCase().includes(bName.toLowerCase())
+              );
+              return acc + (brandVars.length > 0 ? brandVars.length : (p.variants || []).length);
+            }, 0);
 
             return (
               <div key={bName} className="card" style={{ borderLeft: '4px solid #8b5cf6', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -193,8 +200,13 @@ export const Brands = ({ setActiveTab }) => {
               </thead>
               <tbody>
                 {filteredBrands.map((bName, idx) => {
-                  const brandProds = products.filter(p => p.brand === bName);
-                  const totalVariants = brandProds.reduce((acc, p) => acc + (p.variants || []).length, 0);
+                  const brandProds = products.filter(p => p.brand && p.brand.split(',').map(b => b.trim()).includes(bName));
+                  const totalVariants = brandProds.reduce((acc, p) => {
+                    const brandVars = (p.variants || []).filter(v => 
+                      !p.brand || p.brand.split(',').length <= 1 || v.spec.toLowerCase().includes(bName.toLowerCase())
+                    );
+                    return acc + (brandVars.length > 0 ? brandVars.length : (p.variants || []).length);
+                  }, 0);
 
                   return (
                     <tr key={bName}>
