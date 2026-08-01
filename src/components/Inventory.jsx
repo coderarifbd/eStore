@@ -47,8 +47,146 @@ const extractBaseSpec = (spec = '', brandList = []) => {
   return trimmedSpec;
 };
 
+const SearchableCategoryDropdown = ({ categories = [], value, onChange, isBn }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedCat = categories.find(c => c.id === value);
+  const filteredCats = categories.filter(c => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (c.nameBn && c.nameBn.toLowerCase().includes(q)) || (c.nameEn && c.nameEn.toLowerCase().includes(q));
+  });
+
+  return (
+    <div ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
+      {/* Control Box */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          minHeight: '42px',
+          padding: '6px 12px',
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          border: isOpen ? '1px solid #06b6d4' : '1px solid #334155',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          boxSizing: 'border-box'
+        }}
+      >
+        <span style={{ color: selectedCat ? '#f8fafc' : '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>
+          {selectedCat ? (isBn ? selectedCat.nameBn : selectedCat.nameEn) : (isBn ? '-- ক্যাটাগরি বেছে নিন --' : '-- Select Category --')}
+        </span>
+        <ChevronDown size={18} style={{ color: '#94a3b8', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
+      </div>
+
+      {/* Dropdown Menu with Search Field */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            backgroundColor: '#1e293b',
+            border: '1px solid #06b6d4',
+            borderRadius: '10px',
+            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.6)',
+            padding: '8px',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}
+        >
+          {/* Search Input */}
+          <div style={{ padding: '4px 6px 8px 6px', borderBottom: '1px solid #334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Search size={14} color="#06b6d4" />
+            <input
+              type="text"
+              autoFocus
+              placeholder={isBn ? 'ক্যাটাগরি খুঁজুন (যেমন: Breaker, Switch)...' : 'Type to search category...'}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'none',
+                border: 'none',
+                color: '#f8fafc',
+                fontSize: '0.85rem',
+                outline: 'none'
+              }}
+            />
+            {search && (
+              <X size={14} color="#94a3b8" onClick={() => setSearch('')} style={{ cursor: 'pointer' }} />
+            )}
+          </div>
+
+          {/* Categories List */}
+          <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {filteredCats.length > 0 ? (
+              filteredCats.map(c => {
+                const isSelected = c.id === value;
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => {
+                      onChange(c.id);
+                      setIsOpen(false);
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.18)' : 'transparent',
+                      color: isSelected ? '#38bdf8' : '#e2e8f0',
+                      fontSize: '0.875rem',
+                      fontWeight: isSelected ? 700 : 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    <span>{isBn ? c.nameBn : c.nameEn}</span>
+                    {isSelected && <span style={{ color: '#06b6d4', fontWeight: 700 }}>✓</span>}
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                {isBn ? 'কোনো ক্যাটাগরি পাওয়া যায়নি' : 'No matching category'}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const MultiSelectBrandDropdown = ({ brands = [], selectedBrands = [], onChange, isBn }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [brandSearch, setBrandSearch] = useState('');
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -76,6 +214,10 @@ const MultiSelectBrandDropdown = ({ brands = [], selectedBrands = [], onChange, 
       onChange([...brands]);
     }
   };
+
+  const filteredBrands = brands.filter(b => 
+    !brandSearch.trim() || b.toLowerCase().includes(brandSearch.toLowerCase())
+  );
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
@@ -154,7 +296,7 @@ const MultiSelectBrandDropdown = ({ brands = [], selectedBrands = [], onChange, 
             right: 0,
             zIndex: 9999,
             backgroundColor: '#1e293b',
-            border: '1px solid #334155',
+            border: '1px solid #06b6d4',
             borderRadius: '10px',
             boxShadow: '0 12px 30px rgba(0, 0, 0, 0.6)',
             padding: '8px',
@@ -162,10 +304,33 @@ const MultiSelectBrandDropdown = ({ brands = [], selectedBrands = [], onChange, 
             boxSizing: 'border-box'
           }}
         >
+          {/* Brand Search Input */}
+          <div style={{ padding: '4px 6px 8px 6px', borderBottom: '1px solid #334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Search size={14} color="#06b6d4" />
+            <input
+              type="text"
+              autoFocus
+              placeholder={isBn ? 'ব্র্যান্ড খুঁজুন (যেমন: WALTON, MEP)...' : 'Type to search brand...'}
+              value={brandSearch}
+              onChange={(e) => setBrandSearch(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'none',
+                border: 'none',
+                color: '#f8fafc',
+                fontSize: '0.85rem',
+                outline: 'none'
+              }}
+            />
+            {brandSearch && (
+              <X size={14} color="#94a3b8" onClick={() => setBrandSearch('')} style={{ cursor: 'pointer' }} />
+            )}
+          </div>
+
           {/* Header Action */}
           <div style={{
             display: 'flex',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             alignItems: 'center',
             padding: '4px 6px 8px 6px',
             borderBottom: '1px solid #334155',
@@ -195,12 +360,12 @@ const MultiSelectBrandDropdown = ({ brands = [], selectedBrands = [], onChange, 
             gap: '3px',
             paddingRight: '2px'
           }}>
-            {brands.length === 0 ? (
+            {filteredBrands.length === 0 ? (
               <div style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
-                {isBn ? 'ব্র্যান্ড মেনু থেকে ব্র্যান্ড যোগ করুন' : 'No brands available in Brand Menu'}
+                {isBn ? 'কোনো ব্র্যান্ড পাওয়া যায়নি' : 'No matching brand'}
               </div>
             ) : (
-              brands.map(b => {
+              filteredBrands.map(b => {
                 const isSelected = selectedBrands.includes(b);
                 return (
                   <div
@@ -1163,9 +1328,12 @@ export const Inventory = () => {
 
                   <div className="form-group">
                     <label className="form-label">{isBn ? 'ক্যাটাগরি' : 'Category'}</label>
-                    <select className="select-control" value={prodCategory} onChange={(e) => setProdCategory(e.target.value)}>
-                      {categories.map(c => <option key={c.id} value={c.id}>{isBn ? c.nameBn : c.nameEn}</option>)}
-                    </select>
+                    <SearchableCategoryDropdown
+                      categories={categories}
+                      value={prodCategory}
+                      onChange={setProdCategory}
+                      isBn={isBn}
+                    />
                   </div>
 
                   <div className="form-group">
