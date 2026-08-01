@@ -570,34 +570,33 @@ export const Reports = () => {
         <div className="card-title">
           <Wallet size={20} color="#f43f5e" />
           <span>{isBn ? 'সাপ্লায়ার বাকি পরিশোধের খাতা (Supplier Dues Ledger)' : 'Supplier Dues Ledger'}</span>
+          <span className="badge badge-rose" style={{ marginLeft: 'auto' }}>
+            {suppliers.filter(s => (s.balanceDue || 0) > 0).length} {isBn ? 'জন বাকিদার' : 'Pending'}
+          </span>
         </div>
 
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>{isBn ? 'সাপ্লায়ারের নাম' : 'Supplier Name'}</th>
-                <th>{isBn ? 'ফোন নম্বর' : 'Phone'}</th>
-                <th>{isBn ? 'ঠিকানা' : 'Address'}</th>
-                <th>{isBn ? 'পাওনা টাকা (Due Balance)' : 'Due Balance'}</th>
-                <th style={{ textAlign: 'right' }}>{isBn ? 'অ্যাকশন' : 'Action'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {suppliers.map(sup => (
-                <tr key={sup.id}>
-                  <td style={{ fontWeight: 600 }}>{sup.name}</td>
-                  <td>{sup.phone}</td>
-                  <td style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{sup.address}</td>
-                  <td>
-                    {sup.balanceDue > 0 ? (
+        {suppliers.filter(s => (s.balanceDue || 0) > 0).length > 0 ? (
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{isBn ? 'সাপ্লায়ারের নাম' : 'Supplier Name'}</th>
+                  <th>{isBn ? 'ফোন নম্বর' : 'Phone'}</th>
+                  <th>{isBn ? 'ঠিকানা' : 'Address'}</th>
+                  <th>{isBn ? 'পাওনা টাকা (Due Balance)' : 'Due Balance'}</th>
+                  <th style={{ textAlign: 'right' }}>{isBn ? 'অ্যাকশন' : 'Action'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {suppliers.filter(s => (s.balanceDue || 0) > 0).map(sup => (
+                  <tr key={sup.id}>
+                    <td style={{ fontWeight: 600 }}>{sup.name}</td>
+                    <td>{sup.phone}</td>
+                    <td style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{sup.address}</td>
+                    <td>
                       <span className="badge badge-rose">৳{sup.balanceDue.toLocaleString('en-BD')} বাকি</span>
-                    ) : (
-                      <span className="badge badge-green">কোনো পাওনা নেই</span>
-                    )}
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    {sup.balanceDue > 0 && (
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
                       <button
                         onClick={() => {
                           setPaySupId(sup.id);
@@ -607,13 +606,19 @@ export const Reports = () => {
                       >
                         {isBn ? 'বাকি পরিশোধ' : 'Pay Due'}
                       </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#10b981' }}>
+            <p style={{ fontWeight: 600, fontSize: '0.925rem' }}>
+              {isBn ? 'বর্তমানে কোনো সাপ্লায়ারের বকেয়া পাওনা বাকি নেই!' : 'No supplier dues pending!'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Pay Supplier Modal */}

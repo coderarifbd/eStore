@@ -228,35 +228,37 @@ export const Dashboard = ({ setActiveTab }) => {
 
           {lowStockItems.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              {lowStockItems.map(item => (
-                <div key={`${item.productId}_${item.variantId}`} style={{
-                  padding: '0.75rem 0.9rem',
-                  backgroundColor: '#0b0f19',
-                  border: '1px solid #26334d',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  justify: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#f3f4f6' }}>
-                      {isBn ? item.productNameBn : item.productNameEn}
+              <div style={{ maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.65rem', paddingRight: '4px' }}>
+                {lowStockItems.map(item => (
+                  <div key={`${item.productId}_${item.variantId}`} style={{
+                    padding: '0.75rem 0.9rem',
+                    backgroundColor: '#0b0f19',
+                    border: '1px solid #26334d',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    justify: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#f3f4f6' }}>
+                        {isBn ? item.productNameBn : item.productNameEn}
+                      </div>
+                      <div style={{ fontSize: '0.775rem', color: '#60a5fa', marginTop: '2px' }}>
+                        {item.brand} • <strong>{item.spec}</strong>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '0.775rem', color: '#60a5fa', marginTop: '2px' }}>
-                      {item.brand} • <strong>{item.spec}</strong>
-                    </div>
-                  </div>
 
-                  <div style={{ textAlign: 'right' }}>
-                    <div className="badge badge-rose">
-                      {isBn ? `স্টক: ${item.stock} ${item.unit}` : `Stock: ${item.stock}`}
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '3px' }}>
-                      {isBn ? `রি-অর্ডার: ${item.reorderLevel}` : `Reorder: ${item.reorderLevel}`}
+                    <div style={{ textAlign: 'right' }}>
+                      <div className="badge badge-rose">
+                        {isBn ? `স্টক: ${item.stock} ${item.unit}` : `Stock: ${item.stock}`}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '3px' }}>
+                        {isBn ? `রি-অর্ডার: ${item.reorderLevel}` : `Reorder: ${item.reorderLevel}`}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
               <button 
                 onClick={() => setActiveTab('purchases')}
                 className="btn btn-secondary btn-sm" 

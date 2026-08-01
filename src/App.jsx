@@ -94,7 +94,7 @@ const AppContent = ({ currentUser, onLogout }) => {
             </h2>
           </div>
 
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto' }}>
             <span className="badge badge-green">
               {isBn ? 'স্টোর অবস্থা: লাইভ' : 'System Status: Active'}
             </span>
