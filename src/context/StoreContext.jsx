@@ -416,10 +416,15 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
           ? v.attributes.map(a => `${a.label}: ${a.value}`).join(', ')
           : '';
 
+        const rawSpec = v.spec || '';
+        const isStandardSpec = !rawSpec || ['standard', 'default', 'base'].includes(rawSpec.trim().toLowerCase());
+        const cleanSpec = isStandardSpec ? '' : rawSpec.trim();
+
         if (bList.length > 1) {
           bList.forEach(b => {
-            const hasBrandInSpec = v.spec.toLowerCase().includes(b.toLowerCase());
-            const displaySpec = hasBrandInSpec ? v.spec : v.spec;
+            const specSegment = cleanSpec ? ` - ${cleanSpec}` : '';
+            const brandSegment = b ? ` (${b})` : '';
+
             list.push({
               productId: p.id,
               variantId: `${v.id}_${b}`,
@@ -429,7 +434,7 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
               brand: b,
               categoryNameBn: cat ? cat.nameBn : '',
               unit: p.unit,
-              spec: displaySpec,
+              spec: cleanSpec,
               attributes: v.attributes || [],
               attrStr,
               sku: v.sku,
@@ -438,10 +443,13 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
               stock: v.stock || 0,
               reorderLevel: v.reorderLevel || 5,
               batches: v.batches || [],
-              displayName: `${p.nameBn} - ${displaySpec} (${b}) ${attrStr ? `(${attrStr})` : ''}`
+              displayName: `${p.nameBn}${specSegment}${brandSegment}${attrStr ? ` (${attrStr})` : ''}`
             });
           });
         } else {
+          const specSegment = cleanSpec ? ` - ${cleanSpec}` : '';
+          const brandSegment = (bList[0] && bList[0] !== 'Unbranded') ? ` (${bList[0]})` : '';
+
           list.push({
             productId: p.id,
             variantId: v.id,
@@ -451,7 +459,7 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
             brand: bList[0] || p.brand || '',
             categoryNameBn: cat ? cat.nameBn : '',
             unit: p.unit,
-            spec: v.spec,
+            spec: cleanSpec,
             attributes: v.attributes || [],
             attrStr,
             sku: v.sku,
@@ -460,7 +468,7 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
             stock: v.stock || 0,
             reorderLevel: v.reorderLevel || 5,
             batches: v.batches || [],
-            displayName: `${p.nameBn} - ${v.spec} ${attrStr ? `(${attrStr})` : ''}`
+            displayName: `${p.nameBn}${specSegment}${brandSegment}${attrStr ? ` (${attrStr})` : ''}`
           });
         }
       });

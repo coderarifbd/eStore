@@ -479,7 +479,7 @@ export const Inventory = () => {
 
   // Options List
   const [variationOptions, setVariationOptions] = useState([
-    { spec: 'Standard', purchasePrice: 0, sellingPrice: '', stock: 0, reorderLevel: 5 }
+    { spec: '', purchasePrice: 0, sellingPrice: '', stock: 0, reorderLevel: 5 }
   ]);
 
   const addVariationGroup = () => {
@@ -902,7 +902,7 @@ export const Inventory = () => {
     setProdUnit('Pcs');
     setVariationGroups([]);
     setVariationOptions([
-      { spec: 'Standard', purchasePrice: 0, sellingPrice: '', stock: 0, reorderLevel: 5 }
+      { spec: '', purchasePrice: 0, sellingPrice: '', stock: 0, reorderLevel: 5 }
     ]);
   };
 
@@ -1477,10 +1477,9 @@ export const Inventory = () => {
                           </label>
                           <input
                             type="text"
-                            required
                             className="input-control"
-                            placeholder={isBn ? 'যেমন: 1.0 rm - লাল' : 'Option spec'}
-                            value={opt.spec}
+                            placeholder={variationGroups.length === 0 ? (isBn ? 'মূল পণ্য (কোনো ভেরিয়েশন নেই)' : 'Base Product (No Variations)') : (isBn ? 'যেমন: 1.0 rm - লাল' : 'Option spec')}
+                            value={opt.spec === 'Standard' ? '' : opt.spec}
                             onChange={(e) => updateOptionRow(oIdx, 'spec', e.target.value)}
                             style={{ padding: '0.4rem 0.6rem', fontSize: '0.875rem' }}
                           />
