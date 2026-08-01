@@ -1,7 +1,13 @@
 import postgres from 'postgres';
 import { verifyToken, getTokenFromRequest, getDbUrl } from './auth-utils.js';
 
-const sql = postgres(getDbUrl(), { ssl: 'require', max: 1 });
+let sqlClient;
+function getSql() {
+  if (!sqlClient) {
+    sqlClient = postgres(getDbUrl(), { ssl: 'require', max: 1 });
+  }
+  return sqlClient;
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,6 +25,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const sql = getSql();
     const stateData = req.body || {};
 
     // 1. Save to store_state (Full JSON backup)

@@ -1,7 +1,13 @@
 import postgres from 'postgres';
 import { verifyToken, getTokenFromRequest, getDbUrl } from './auth-utils.js';
 
-const sql = postgres(getDbUrl(), { ssl: 'require', max: 1 });
+let sql;
+function getSql() {
+  if (!sql) {
+    sql = postgres(getDbUrl(), { ssl: 'require', max: 1 });
+  }
+  return sql;
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,7 +25,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const result = await sql`SELECT data FROM store_state WHERE id = 1`;
+    const sqlClient = getSql();
+    const result = await sqlClient`SELECT data FROM store_state WHERE id = 1`;
     if (result.length === 0 || !result[0].data) {
       return res.status(200).json({});
     }

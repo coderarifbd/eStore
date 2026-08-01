@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 const AUTH_SECRET = process.env.AUTH_SECRET || 'estore-default-secret-key-2026';
-const DEFAULT_DB_URL = "postgresql://neondb_owner:npg_NcGoRyg6k9Jq@ep-raspy-recipe-ax20vp9q-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const DEFAULT_DB_URL = "postgresql://neondb_owner:npg_NcGoRyg6k9Jq@ep-raspy-recipe-ax20vp9q-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require";
 
 export function getDbUrl() {
   return process.env.DATABASE_URL || DEFAULT_DB_URL;
