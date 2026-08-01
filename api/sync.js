@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     if (Array.isArray(stateData.employees)) {
       if (stateData.employees.length > 0) {
         const ids = stateData.employees.map(e => e.id);
-        await sql`DELETE FROM employees WHERE id != ALL(${ids})`;
+        await sql`DELETE FROM employees WHERE NOT (id = ANY(${ids}))`;
         for (let emp of stateData.employees) {
           await sql`
             INSERT INTO employees (id, name, phone, designation, monthly_salary, status, join_date)
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
     if (Array.isArray(stateData.suppliers)) {
       if (stateData.suppliers.length > 0) {
         const ids = stateData.suppliers.map(s => s.id);
-        await sql`DELETE FROM suppliers WHERE id != ALL(${ids})`;
+        await sql`DELETE FROM suppliers WHERE NOT (id = ANY(${ids}))`;
         for (let sup of stateData.suppliers) {
           await sql`
             INSERT INTO suppliers (id, name, phone, address, balance_due)
@@ -92,7 +92,7 @@ export default async function handler(req, res) {
     if (Array.isArray(stateData.sales)) {
       if (stateData.sales.length > 0) {
         const ids = stateData.sales.map(s => s.id);
-        await sql`DELETE FROM sales WHERE id != ALL(${ids})`;
+        await sql`DELETE FROM sales WHERE NOT (id = ANY(${ids}))`;
         for (let s of stateData.sales) {
           await sql`
             INSERT INTO sales (id, date, customer_name, customer_phone, customer_address, items, sub_total, discount, grand_total, paid_amount, due_amount, total_cost_price)
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
     if (Array.isArray(stateData.purchases)) {
       if (stateData.purchases.length > 0) {
         const ids = stateData.purchases.map(p => p.id);
-        await sql`DELETE FROM purchases WHERE id != ALL(${ids})`;
+        await sql`DELETE FROM purchases WHERE NOT (id = ANY(${ids}))`;
         for (let p of stateData.purchases) {
           await sql`
             INSERT INTO purchases (id, date, supplier_id, supplier_name, items, grand_total, paid_amount, due_amount)
@@ -166,7 +166,7 @@ export default async function handler(req, res) {
     if (Array.isArray(stateData.expenses)) {
       if (stateData.expenses.length > 0) {
         const ids = stateData.expenses.map(e => e.id);
-        await sql`DELETE FROM expenses WHERE id != ALL(${ids})`;
+        await sql`DELETE FROM expenses WHERE NOT (id = ANY(${ids}))`;
         for (let e of stateData.expenses) {
           await sql`
             INSERT INTO expenses (id, category, amount, date, notes, paid_by)
@@ -195,7 +195,7 @@ export default async function handler(req, res) {
     if (Array.isArray(stateData.salaryTx)) {
       if (stateData.salaryTx.length > 0) {
         const ids = stateData.salaryTx.map(st => st.id);
-        await sql`DELETE FROM salary_tx WHERE id != ALL(${ids})`;
+        await sql`DELETE FROM salary_tx WHERE NOT (id = ANY(${ids}))`;
         for (let st of stateData.salaryTx) {
           await sql`
             INSERT INTO salary_tx (id, employee_id, employee_name, month_year, type, amount, date, notes)
@@ -228,7 +228,7 @@ export default async function handler(req, res) {
     if (Array.isArray(stateData.products)) {
       if (stateData.products.length > 0) {
         const ids = stateData.products.map(p => p.id);
-        await sql`DELETE FROM products WHERE id != ALL(${ids})`;
+        await sql`DELETE FROM products WHERE NOT (id = ANY(${ids}))`;
         for (let p of stateData.products) {
           const firstVariant = (p.variants && p.variants[0]) || {};
           await sql`
