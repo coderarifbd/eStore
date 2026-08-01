@@ -13,7 +13,7 @@ const sql = postgres(dbUrl, { ssl: 'require', max: 1 });
 
 async function seed() {
   try {
-    console.log('Seeding Neon database with initial store data...');
+    console.log('Seeding Neon database with initial store data across all relational tables...');
     
     // Prepare products with initial batch structure
     const formattedProducts = INITIAL_PRODUCTS.map(p => ({
@@ -53,7 +53,39 @@ async function seed() {
         updated_at = CURRENT_TIMESTAMP
     `;
 
-    // 2. Insert into products table
+    // 2. Insert into employees table
+    await sql`DELETE FROM employees`;
+    for (let emp of INITIAL_EMPLOYEES) {
+      await sql`
+        INSERT INTO employees (id, name, phone, designation, monthly_salary, status, join_date)
+        VALUES (
+          ${emp.id},
+          ${emp.name || ''},
+          ${emp.phone || null},
+          ${emp.designation || null},
+          ${Number(emp.salary || emp.monthlySalary || 0)},
+          ${emp.status || 'Active'},
+          ${emp.joinDate || null}
+        )
+      `;
+    }
+
+    // 3. Insert into suppliers table
+    await sql`DELETE FROM suppliers`;
+    for (let sup of INITIAL_SUPPLIERS) {
+      await sql`
+        INSERT INTO suppliers (id, name, phone, address, balance_due)
+        VALUES (
+          ${sup.id},
+          ${sup.name || ''},
+          ${sup.phone || null},
+          ${sup.address || null},
+          ${Number(sup.balanceDue || 0)}
+        )
+      `;
+    }
+
+    // 4. Insert into products table
     await sql`DELETE FROM products`;
     for (let p of formattedProducts) {
       const firstVariant = (p.variants && p.variants[0]) || {};
@@ -67,12 +99,12 @@ async function seed() {
           ${p.brand || null}, 
           ${firstVariant.spec || null}, 
           ${firstVariant.stock || 0}, 
-          ${JSON.stringify(firstVariant.batches || [])}
+          ${sql.json(firstVariant.batches || [])}
         )
       `;
     }
 
-    console.log('Successfully seeded Neon database!');
+    console.log('Successfully seeded Neon database tables (employees, suppliers, products, store_state)!');
   } catch (err) {
     console.error('Seed error:', err);
   } finally {
