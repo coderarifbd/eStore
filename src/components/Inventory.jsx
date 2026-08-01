@@ -503,52 +503,67 @@ export const Inventory = () => {
   // Handler when brands are added/removed in Select Brand(s)
   const handleProdBrandsChange = (newBrands) => {
     const addedBrands = newBrands.filter(b => !prodBrands.includes(b));
+    const removedBrands = prodBrands.filter(b => !newBrands.includes(b));
     setProdBrands(newBrands);
 
-    if (addedBrands.length > 0) {
-      const cleanSpecsSet = new Set();
-      const allKnownBrands = [...brands, ...newBrands, ...prodBrands];
+    const cleanSpecsSet = new Set();
+    const allKnownBrands = [...brands, ...newBrands, ...prodBrands];
 
-      // 1. From variationGroups
-      variationGroups.forEach(grp => {
-        if (grp.values) {
-          grp.values.split(',').forEach(val => {
-            const baseSpec = extractBaseSpec(val, allKnownBrands);
-            if (baseSpec) cleanSpecsSet.add(baseSpec);
-          });
-        }
-      });
-
-      // 2. From variationOptions
-      variationOptions.forEach(opt => {
-        const baseSpec = extractBaseSpec(opt.spec, allKnownBrands);
-        if (baseSpec) cleanSpecsSet.add(baseSpec);
-      });
-
-      const baseSpecs = Array.from(cleanSpecsSet);
-
-      if (baseSpecs.length > 0) {
-        setVariationOptions(prev => {
-          const nextOptions = [...prev];
-          addedBrands.forEach(brand => {
-            baseSpecs.forEach(spec => {
-              const comboSpec = `${brand} - ${spec}`;
-              const exists = nextOptions.some(opt => opt.spec === comboSpec);
-              if (!exists) {
-                nextOptions.push({
-                  spec: comboSpec,
-                  purchasePrice: 0,
-                  sellingPrice: 0,
-                  stock: 0,
-                  reorderLevel: 5
-                });
-              }
-            });
-          });
-          return nextOptions;
+    // 1. From variationGroups
+    variationGroups.forEach(grp => {
+      if (grp.values) {
+        grp.values.split(',').forEach(val => {
+          const baseSpec = extractBaseSpec(val, allKnownBrands);
+          if (baseSpec) cleanSpecsSet.add(baseSpec);
         });
       }
-    }
+    });
+
+    // 2. From variationOptions
+    variationOptions.forEach(opt => {
+      const baseSpec = extractBaseSpec(opt.spec, allKnownBrands);
+      if (baseSpec) cleanSpecsSet.add(baseSpec);
+    });
+
+    const baseSpecs = Array.from(cleanSpecsSet);
+
+    setVariationOptions(prev => {
+      let filtered = [...prev];
+
+      // Remove variations for removed brands
+      if (removedBrands.length > 0) {
+        filtered = filtered.filter(opt => {
+          const optSpecLower = opt.spec.toLowerCase();
+          return !removedBrands.some(rb => {
+            const rbLower = rb.toLowerCase();
+            return optSpecLower.startsWith(`${rbLower} -`) || optSpecLower.startsWith(`${rbLower}:`) || optSpecLower === rbLower;
+          });
+        });
+      }
+
+      // Add variations for newly added brands
+      if (addedBrands.length > 0 && baseSpecs.length > 0) {
+        const newCombos = [];
+        addedBrands.forEach(brand => {
+          baseSpecs.forEach(spec => {
+            const comboSpec = `${brand} - ${spec}`;
+            const exists = filtered.some(opt => opt.spec === comboSpec);
+            if (!exists) {
+              newCombos.push({
+                spec: comboSpec,
+                purchasePrice: 0,
+                sellingPrice: 0,
+                stock: 0,
+                reorderLevel: 5
+              });
+            }
+          });
+        });
+        filtered = [...filtered, ...newCombos];
+      }
+
+      return filtered;
+    });
   };
 
   // Populate Edit Product Modal with exact same rich form
