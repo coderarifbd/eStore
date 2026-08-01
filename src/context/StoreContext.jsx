@@ -116,48 +116,66 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
   };
 
   const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem('elec_categories');
-    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+    try {
+      const saved = localStorage.getItem('elec_categories');
+      return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+    } catch { return INITIAL_CATEGORIES; }
   });
 
   const [brands, setBrands] = useState(() => {
-    const saved = localStorage.getItem('elec_brands');
-    return saved ? JSON.parse(saved) : INITIAL_BRANDS;
+    try {
+      const saved = localStorage.getItem('elec_brands');
+      return saved ? JSON.parse(saved) : INITIAL_BRANDS;
+    } catch { return INITIAL_BRANDS; }
   });
 
   const [presets, setPresets] = useState(() => {
-    const saved = localStorage.getItem('elec_presets');
-    return saved ? JSON.parse(saved) : INITIAL_PRESETS;
+    try {
+      const saved = localStorage.getItem('elec_presets');
+      return saved ? JSON.parse(saved) : INITIAL_PRESETS;
+    } catch { return INITIAL_PRESETS; }
   });
 
   const [suppliers, setSuppliers] = useState(() => {
-    const saved = localStorage.getItem('elec_suppliers');
-    return saved ? JSON.parse(saved) : INITIAL_SUPPLIERS;
+    try {
+      const saved = localStorage.getItem('elec_suppliers');
+      return saved ? JSON.parse(saved) : INITIAL_SUPPLIERS;
+    } catch { return INITIAL_SUPPLIERS; }
   });
 
   const [sales, setSales] = useState(() => {
-    const saved = localStorage.getItem('elec_sales');
-    return saved ? JSON.parse(saved) : INITIAL_SALES;
+    try {
+      const saved = localStorage.getItem('elec_sales');
+      return saved ? JSON.parse(saved) : INITIAL_SALES;
+    } catch { return INITIAL_SALES; }
   });
 
   const [purchases, setPurchases] = useState(() => {
-    const saved = localStorage.getItem('elec_purchases');
-    return saved ? JSON.parse(saved) : INITIAL_PURCHASE_VOUCHERS;
+    try {
+      const saved = localStorage.getItem('elec_purchases');
+      return saved ? JSON.parse(saved) : INITIAL_PURCHASE_VOUCHERS;
+    } catch { return INITIAL_PURCHASE_VOUCHERS; }
   });
 
   const [expenses, setExpenses] = useState(() => {
-    const saved = localStorage.getItem('elec_expenses');
-    return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
+    try {
+      const saved = localStorage.getItem('elec_expenses');
+      return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
+    } catch { return INITIAL_EXPENSES; }
   });
 
   const [employees, setEmployees] = useState(() => {
-    const saved = localStorage.getItem('elec_employees');
-    return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+    try {
+      const saved = localStorage.getItem('elec_employees');
+      return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+    } catch { return INITIAL_EMPLOYEES; }
   });
 
   const [salaryTx, setSalaryTx] = useState(() => {
-    const saved = localStorage.getItem('elec_salary_tx');
-    return saved ? JSON.parse(saved) : INITIAL_SALARY_TRANSACTIONS;
+    try {
+      const saved = localStorage.getItem('elec_salary_tx');
+      return saved ? JSON.parse(saved) : INITIAL_SALARY_TRANSACTIONS;
+    } catch { return INITIAL_SALARY_TRANSACTIONS; }
   });
 
   const [printDoc, setPrintDoc] = useState(null);
@@ -200,25 +218,24 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
         });
         if (response.status === 401) { onAuthError?.(); return; }
         if (response.ok) {
-          const data = await response.json();
-          
-          // If DB responded without error, it IS the source of truth
-          // Even empty {} means "no data yet" — use empty arrays, not demo data
-          if (data && !data.error) {
-            setProducts(data.products || []);
-            setSuppliers(data.suppliers || []);
-            setSales(data.sales || []);
-            setPurchases(data.purchases || []);
-            setExpenses(data.expenses || []);
-            setEmployees(data.employees || []);
-            setSalaryTx(data.salaryTx || []);
-            if (data.categories) setCategories(data.categories);
-            if (data.brands) setBrands(data.brands);
+          try {
+            const data = await response.json();
+            if (data && !data.error) {
+              if (Array.isArray(data.products)) setProducts(data.products);
+              if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
+              if (Array.isArray(data.sales)) setSales(data.sales);
+              if (Array.isArray(data.purchases)) setPurchases(data.purchases);
+              if (Array.isArray(data.expenses)) setExpenses(data.expenses);
+              if (Array.isArray(data.employees)) setEmployees(data.employees);
+              if (Array.isArray(data.salaryTx)) setSalaryTx(data.salaryTx);
+              if (Array.isArray(data.categories) && data.categories.length > 0) setCategories(data.categories);
+              if (Array.isArray(data.brands) && data.brands.length > 0) setBrands(data.brands);
+            }
+          } catch (jsonErr) {
+            console.warn("API response was not valid JSON, using cached data.");
           }
         }
-        // If response not ok (500 etc), keep localStorage/demo data as fallback
       } catch (err) {
-        // Network error — keep localStorage/demo data as offline fallback
         console.warn("DB unavailable, using local cache:", err);
       } finally {
         setIsLoaded(true);
