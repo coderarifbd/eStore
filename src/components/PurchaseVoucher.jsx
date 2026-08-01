@@ -668,42 +668,14 @@ export const PurchaseVoucher = () => {
                   <SearchableSelectDropdown
                     options={(() => {
                       if (!activeProduct || !activeProduct.variants) return [];
-                      const brandList = activeProduct.brand
-                        ? activeProduct.brand.split(',').map(b => b.trim()).filter(Boolean)
-                        : [];
-
-                      const options = [];
-                      if (brandList.length > 0) {
-                        brandList.forEach(b => {
-                          activeProduct.variants.forEach(v => {
-                            const hasBrandInSpec = v.spec.toLowerCase().includes(b.toLowerCase());
-                            const displaySpec = hasBrandInSpec ? v.spec : `${v.spec} (${b})`;
-                            const optionValue = hasBrandInSpec ? v.id : `${v.id}__BRAND__${b}`;
-                            options.push({
-                              value: optionValue,
-                              id: v.id,
-                              brand: b,
-                              spec: v.spec,
-                              displaySpec,
-                              label: `${displaySpec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`,
-                              subText: `(কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
-                            });
-                          });
-                        });
-                      } else {
-                        activeProduct.variants.forEach(v => {
-                          options.push({
-                            value: v.id,
-                            id: v.id,
-                            brand: '',
-                            spec: v.spec,
-                            displaySpec: v.spec,
-                            label: `${v.spec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`,
-                            subText: `(কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
-                          });
-                        });
-                      }
-                      return options;
+                      return activeProduct.variants.map(v => ({
+                        value: v.id,
+                        id: v.id,
+                        spec: v.spec,
+                        displaySpec: v.spec,
+                        label: `${v.spec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`,
+                        subText: `(কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
+                      }));
                     })()}
                     value={selectedVarId}
                     disabled={!selectedProdId}
@@ -1270,42 +1242,14 @@ export const PurchaseVoucher = () => {
                     <SearchableSelectDropdown
                       options={(() => {
                         if (!activeEditModalProduct || !activeEditModalProduct.variants) return [];
-                        const brandList = activeEditModalProduct.brand
-                          ? activeEditModalProduct.brand.split(',').map(b => b.trim()).filter(Boolean)
-                          : [];
-
-                        const options = [];
-                        if (brandList.length > 0) {
-                          brandList.forEach(b => {
-                            activeEditModalProduct.variants.forEach(v => {
-                              const hasBrandInSpec = v.spec.toLowerCase().includes(b.toLowerCase());
-                              const displaySpec = hasBrandInSpec ? v.spec : `${v.spec} (${b})`;
-                              const optionValue = hasBrandInSpec ? v.id : `${v.id}__BRAND__${b}`;
-                              options.push({
-                                value: optionValue,
-                                id: v.id,
-                                brand: b,
-                                spec: v.spec,
-                                displaySpec,
-                                label: `${displaySpec} (৳${v.purchasePrice})`,
-                                subText: `(৳${v.purchasePrice})`
-                              });
-                            });
-                          });
-                        } else {
-                          activeEditModalProduct.variants.forEach(v => {
-                            options.push({
-                              value: v.id,
-                              id: v.id,
-                              brand: '',
-                              spec: v.spec,
-                              displaySpec: v.spec,
-                              label: `${v.spec} (৳${v.purchasePrice})`,
-                              subText: `(৳${v.purchasePrice})`
-                            });
-                          });
-                        }
-                        return options;
+                        return activeEditModalProduct.variants.map(v => ({
+                          value: v.id,
+                          id: v.id,
+                          spec: v.spec,
+                          displaySpec: v.spec,
+                          label: `${v.spec} (৳${v.purchasePrice || 0})`,
+                          subText: `(৳${v.purchasePrice || 0})`
+                        }));
                       })()}
                       value={editModalVarId}
                       disabled={!editModalProdId}
