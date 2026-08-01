@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useStore } from '../context/StoreContext';
 import { Users, UserPlus, Trash2, KeyRound, Shield, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export const UserManagement = () => {
+  const { showConfirm } = useStore();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -13,6 +15,11 @@ export const UserManagement = () => {
   const token = localStorage.getItem('estore_token');
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
+  const showMsg = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+  };
+
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/users', { headers });
@@ -20,23 +27,16 @@ export const UserManagement = () => {
         const data = await res.json();
         setUsers(data.users || []);
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    } catch { showMsg('error', 'ইউজার লোড করতে সমস্যা হয়েছে'); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { fetchUsers(); }, []);
 
-  const showMsg = (type, text) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  };
-
-  const addUser = async () => {
-    if (!newUser.username.trim() || !newUser.password.trim()) {
-      showMsg('error', 'ইউজারনেম ও পাসওয়ার্ড আবশ্যক');
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!newUser.username || !newUser.password || !newUser.name) {
+      showMsg('error', 'সবগুলো ফিল্ড পূরণ করুন');
       return;
     }
     try {
@@ -46,7 +46,7 @@ export const UserManagement = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        showMsg('success', 'ইউজার তৈরি হয়েছে');
+        showMsg('success', 'নতুন ইউজার তৈরি হয়েছে');
         setNewUser({ username: '', password: '', name: '', role: 'staff' });
         setShowAddForm(false);
         fetchUsers();
@@ -57,7 +57,13 @@ export const UserManagement = () => {
   };
 
   const deleteUser = async (username) => {
-    if (!window.confirm(`"${username}" ইউজারকে মুছে ফেলতে চান?`)) return;
+    const confirmed = await showConfirm({
+      title: 'ইউজার মুছে ফেলা',
+      message: `আপনি কি নিশ্চিত যে "${username}" ইউজারকে মুছে ফেলতে চান?`,
+      type: 'danger',
+      confirmText: 'হ্যাঁ, ডিলিট করুন'
+    });
+    if (!confirmed) return;
     try {
       const res = await fetch('/api/users', {
         method: 'DELETE', headers,

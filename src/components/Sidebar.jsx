@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup, currentUser, onLogout }) => {
-  const { lang, setLang, resetToDemoData } = useStore();
+  const { lang, setLang, resetToDemoData, showConfirm } = useStore();
   const isBn = lang === 'bn';
   const isAdmin = currentUser?.role === 'admin';
 
@@ -239,8 +239,14 @@ export const Sidebar = ({ activeTab, setActiveTab, onOpenBackup, currentUser, on
         )}
 
         <button 
-          onClick={() => {
-            if (window.confirm(isBn ? 'আপনি কি লগআউট করতে চান?' : 'Do you want to logout?')) {
+          onClick={async () => {
+            const confirmed = await showConfirm({
+              title: isBn ? 'লগআউট নিশ্চিতকরণ' : 'Logout Confirmation',
+              message: isBn ? 'আপনি কি নিশ্চিত যে অ্যাকাউন্ট থেকে লগআউট করতে চান?' : 'Are you sure you want to log out?',
+              type: 'warning',
+              confirmText: isBn ? 'হ্যাঁ, লগআউট' : 'Logout'
+            });
+            if (confirmed) {
               onLogout?.();
             }
           }}

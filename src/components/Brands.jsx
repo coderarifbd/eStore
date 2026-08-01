@@ -3,7 +3,7 @@ import { useStore } from '../context/StoreContext';
 import { Tag, PlusCircle, Edit3, Trash2, Search, LayoutGrid, List } from 'lucide-react';
 
 export const Brands = ({ setActiveTab }) => {
-  const { lang, brands, products, addBrand, deleteBrand, updateBrand } = useStore();
+  const { lang, brands, products, addBrand, deleteBrand, updateBrand, showConfirm } = useStore();
   const isBn = lang === 'bn';
 
   const [newBrandName, setNewBrandName] = useState('');
@@ -156,8 +156,14 @@ export const Brands = ({ setActiveTab }) => {
                   </button>
 
                   <button
-                    onClick={() => {
-                      if (window.confirm(isBn ? `আপনি কি নিশ্চিত যে "${bName}" ব্র্যান্ডটি মুছে ফেলতে চান?` : `Delete brand "${bName}"?`)) {
+                    onClick={async () => {
+                      const confirmed = await showConfirm({
+                        title: isBn ? 'ব্র্যান্ড মুছে ফেলা' : 'Delete Brand',
+                        message: isBn ? `আপনি কি নিশ্চিত যে "${bName}" ব্র্যান্ডটি মুছে ফেলতে চান?` : `Delete brand "${bName}"?`,
+                        type: 'danger',
+                        confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                      });
+                      if (confirmed) {
                         deleteBrand(bName);
                       }
                     }}
@@ -216,8 +222,14 @@ export const Brands = ({ setActiveTab }) => {
                           </button>
 
                           <button
-                            onClick={() => {
-                              if (window.confirm(isBn ? `আপনি কি নিশ্চিত যে "${bName}" ব্র্যান্ডটি মুছে ফেলতে চান?` : `Delete brand "${bName}"?`)) {
+                            onClick={async () => {
+                              const confirmed = await showConfirm({
+                                title: isBn ? 'ব্র্যান্ড মুছে ফেলা' : 'Delete Brand',
+                                message: isBn ? `আপনি কি নিশ্চিত যে "${bName}" ব্র্যান্ডটি মুছে ফেলতে চান?` : `Delete brand "${bName}"?`,
+                                type: 'danger',
+                                confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                              });
+                              if (confirmed) {
                                 deleteBrand(bName);
                               }
                             }}

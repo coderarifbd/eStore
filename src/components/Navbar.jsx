@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export const Navbar = ({ activeTab, setActiveTab, onOpenBackup }) => {
-  const { lang, setLang, resetToDemoData } = useStore();
+  const { lang, setLang, resetToDemoData, showConfirm } = useStore();
 
   const isBn = lang === 'bn';
 
@@ -96,8 +96,14 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenBackup }) => {
 
           {/* Reset Demo Data */}
           <button 
-            onClick={() => {
-              if (window.confirm(isBn ? 'আপনি কি নিশ্চিত যে সমস্ত টেস্ট ডাটা মূল ডেমো ডাটায় রিসেট করতে চান?' : 'Reset to default demo data?')) {
+            onClick={async () => {
+              const confirmed = await showConfirm({
+                title: isBn ? 'ডেমো রিসেট' : 'Reset Demo Data',
+                message: isBn ? 'আপনি কি নিশ্চিত যে সমস্ত টেস্ট ডাটা মূল ডেমো ডাটায় রিসেট করতে চান?' : 'Reset to default demo data?',
+                type: 'danger',
+                confirmText: isBn ? 'হ্যাঁ, রিসেট করুন' : 'Reset'
+              });
+              if (confirmed) {
                 resetToDemoData();
               }
             }}

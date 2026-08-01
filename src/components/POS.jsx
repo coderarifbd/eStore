@@ -18,7 +18,7 @@ import {
 import confetti from 'canvas-confetti';
 
 export const POS = () => {
-  const { lang, sales, addSale, updateSale, deleteSale, setPrintDoc } = useStore();
+  const { lang, sales, addSale, updateSale, deleteSale, setPrintDoc, showConfirm } = useStore();
   const isBn = lang === 'bn';
 
   // Screen View Switcher: 'pos' (New Sale) vs 'history' (Old Invoices Archive)
@@ -697,8 +697,14 @@ export const POS = () => {
 
                             {/* Delete Invoice & Refund Stock */}
                             <button
-                              onClick={() => {
-                                if (window.confirm(isBn ? `আপনি কি নিশ্চিত যে ক্যাশ মেমো ${sale.id} মুছে ফেলতে চান? পণ্যের স্টক স্বয়ংক্রিয়ভাবে ফেরত যাবে।` : 'Delete invoice and refund stock?')) {
+                              onClick={async () => {
+                                const confirmed = await showConfirm({
+                                  title: isBn ? 'মেমো মুছে ফেলা' : 'Delete Invoice',
+                                  message: isBn ? `আপনি কি নিশ্চিত যে ক্যাশ মেমো ${sale.id} মুছে ফেলতে চান? পণ্যের স্টক স্বয়ংক্রিয়ভাবে ফেরত যাবে।` : `Delete invoice ${sale.id} and refund stock?`,
+                                  type: 'danger',
+                                  confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                                });
+                                if (confirmed) {
                                   deleteSale(sale.id);
                                 }
                               }}

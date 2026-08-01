@@ -3,7 +3,7 @@ import { useStore } from '../context/StoreContext';
 import { Download, Upload, Database, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export const BackupModal = ({ isOpen, onClose }) => {
-  const { lang, exportDataJSON, importDataJSON, clearAllData } = useStore();
+  const { lang, exportDataJSON, importDataJSON, clearAllData, showConfirm } = useStore();
   const isBn = lang === 'bn';
 
   const [importText, setImportText] = useState('');
@@ -115,8 +115,14 @@ export const BackupModal = ({ isOpen, onClose }) => {
               {isBn ? 'দোকানের সমস্ত ডেমো ডাটা এবং ডাটাবেস সম্পূর্ণ খালি করতে চান? এই কাজ করার পর ডাটা ফিরে পাওয়া যাবে না।' : 'Wipe all items and reset database to completely empty.'}
             </p>
             <button 
-              onClick={() => {
-                if (window.confirm(isBn ? 'আপনি কি নিশ্চিতভাবে সব ডেমো ডাটা মুছে ডাটাবেজটি সম্পূর্ণ খালি করতে চান?' : 'Are you sure you want to completely wipe all store data?')) {
+              onClick={async () => {
+                const confirmed = await showConfirm({
+                  title: isBn ? 'ডাটাবেজ সম্পূর্ণ রিসেট' : 'Wipe & Reset Database',
+                  message: isBn ? 'আপনি কি নিশ্চিতভাবে দোকানের সমস্ত ডাটা মুছে ডাটাবেজটি সম্পূর্ণ খালি করতে চান? এই কাজ করার পর ডাটা পুনরায় ফিরে পাওয়া যাবে না।' : 'Are you sure you want to completely wipe all store data? This action cannot be undone.',
+                  type: 'danger',
+                  confirmText: isBn ? 'হ্যাঁ, ডাটা মুছে ফেলুন' : 'Wipe Data'
+                });
+                if (confirmed) {
                   clearAllData();
                   setStatusMsg({ type: 'success', text: isBn ? 'ডাটাবেজ সম্পূর্ণ রিসেট হয়েছে!' : 'Database wiped successfully!' });
                   setTimeout(() => {

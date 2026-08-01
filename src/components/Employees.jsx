@@ -3,7 +3,7 @@ import { useStore } from '../context/StoreContext';
 import { Users, PlusCircle, DollarSign, Calendar, Printer, CheckCircle, HandCoins, Edit3, Trash2 } from 'lucide-react';
 
 export const Employees = () => {
-  const { lang, employees, salaryTx, addEmployee, updateEmployee, deleteEmployee, addSalaryTransaction, setPrintDoc } = useStore();
+  const { lang, employees, salaryTx, addEmployee, updateEmployee, deleteEmployee, addSalaryTransaction, setPrintDoc, showConfirm } = useStore();
   const isBn = lang === 'bn';
 
   // Modals
@@ -160,8 +160,14 @@ export const Employees = () => {
                       <Edit3 size={13} />
                     </button>
                     <button
-                      onClick={() => {
-                        if (window.confirm(isBn ? `আপনি কি নিশ্চিত যে কর্মচারী ${emp.name} কে মুছে ফেলতে চান?` : `Are you sure you want to delete employee ${emp.name}?`)) {
+                      onClick={async () => {
+                        const confirmed = await showConfirm({
+                          title: isBn ? 'কর্মচারী মুছে ফেলা' : 'Delete Employee',
+                          message: isBn ? `আপনি কি নিশ্চিত যে কর্মচারী ${emp.name} কে মুছে ফেলতে চান?` : `Are you sure you want to delete employee ${emp.name}?`,
+                          type: 'danger',
+                          confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                        });
+                        if (confirmed) {
                           deleteEmployee(emp.id);
                         }
                       }}

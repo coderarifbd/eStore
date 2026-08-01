@@ -241,7 +241,8 @@ export const Inventory = () => {
     duplicateProductToBrand,
     updateVariantDetails,
     deleteVariantFromProduct,
-    deleteProduct
+    deleteProduct,
+    showConfirm
   } = useStore();
 
   const isBn = lang === 'bn';
@@ -785,9 +786,15 @@ export const Inventory = () => {
 
                     {/* Delete Product Symbol Button */}
                     <button
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        if (window.confirm(isBn ? 'আপনি কি নিশ্চিত যে এই সম্পূর্ণ পণ্যটি মুছে ফেলতে চান?' : 'Delete product?')) {
+                        const confirmed = await showConfirm({
+                          title: isBn ? 'পণ্য মুছে ফেলা' : 'Delete Product',
+                          message: isBn ? 'আপনি কি নিশ্চিত যে এই সম্পূর্ণ পণ্যটি মুছে ফেলতে চান?' : 'Delete this product?',
+                          type: 'danger',
+                          confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                        });
+                        if (confirmed) {
                           deleteProduct(prod.id);
                         }
                       }}
@@ -884,8 +891,15 @@ export const Inventory = () => {
                                   </button>
                                   {(prod.variants || []).length > 1 && (
                                     <button
-                                      onClick={() => {
-                                        if (window.confirm(isBn ? 'এই ভেরিয়েন্ট অপশনটি মুছে ফেলতে চান?' : 'Delete variant?')) {
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const confirmed = await showConfirm({
+                                          title: isBn ? 'ভেরিয়েন্ট মুছে ফেলা' : 'Delete Variant',
+                                          message: isBn ? 'এই ভেরিয়েন্ট অপশনটি মুছে ফেলতে চান?' : 'Delete this variant?',
+                                          type: 'danger',
+                                          confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                                        });
+                                        if (confirmed) {
                                           deleteVariantFromProduct(prod.id, varItem.id);
                                         }
                                       }}
@@ -966,8 +980,14 @@ export const Inventory = () => {
                         {p.isCustom && (
                           <button
                             type="button"
-                            onClick={() => {
-                              if (window.confirm(isBn ? 'এই কাস্টম টেমপ্লেটটি মুছে ফেলতে চান?' : 'Delete preset?')) {
+                            onClick={async () => {
+                              const confirmed = await showConfirm({
+                                title: isBn ? 'টেমপ্লেট মুছে ফেলা' : 'Delete Preset',
+                                message: isBn ? 'এই কাস্টম টেমপ্লেটটি মুছে ফেলতে চান?' : 'Delete preset?',
+                                type: 'danger',
+                                confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                              });
+                              if (confirmed) {
                                 deleteCustomPreset(p.id);
                               }
                             }}

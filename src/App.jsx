@@ -14,11 +14,12 @@ import { Reports } from './components/Reports';
 import { UserManagement } from './components/UserManagement';
 import { PrintInvoiceModal } from './components/PrintInvoiceModal';
 import { BackupModal } from './components/BackupModal';
+import { ConfirmModal } from './components/ConfirmModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { LayoutDashboard, ShoppingCart, FileText, Package, FolderPlus, Tag, Receipt, Users, TrendingUp, UserCog } from 'lucide-react';
 
 const AppContent = ({ currentUser, onLogout }) => {
-  const { lang } = useStore();
+  const { lang, confirmState, closeConfirm } = useStore();
   const isBn = lang === 'bn';
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -132,6 +133,9 @@ const AppContent = ({ currentUser, onLogout }) => {
 
       {/* Printable Cash Memo & Payslip Modal */}
       <PrintInvoiceModal />
+
+      {/* Modern Custom Confirm Modal */}
+      <ConfirmModal confirmState={confirmState} onClose={closeConfirm} />
 
       {/* Backup & Restore Modal */}
       <BackupModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />

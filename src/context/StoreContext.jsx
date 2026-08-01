@@ -163,6 +163,34 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
   const [printDoc, setPrintDoc] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'danger',
+    confirmText: '',
+    cancelText: '',
+    resolveFn: null
+  });
+
+  const showConfirm = ({ title, message, type = 'danger', confirmText, cancelText }) => {
+    return new Promise((resolve) => {
+      setConfirmState({
+        isOpen: true,
+        title: title || (lang === 'bn' ? 'নিশ্চিতকরণ' : 'Confirm Action'),
+        message: message || '',
+        type,
+        confirmText: confirmText || (lang === 'bn' ? 'হ্যাঁ, ডিলিট করুন' : 'Confirm'),
+        cancelText: cancelText || (lang === 'bn' ? 'বাতিল' : 'Cancel'),
+        resolveFn: resolve
+      });
+    });
+  };
+
+  const closeConfirm = () => {
+    setConfirmState(prev => ({ ...prev, isOpen: false, resolveFn: null }));
+  };
+
   // Load store state from Neon Postgres — DB is the single source of truth
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -988,7 +1016,8 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
       clearAllData,
       exportDataJSON,
       importDataJSON,
-      printDoc, setPrintDoc
+      printDoc, setPrintDoc,
+      confirmState, showConfirm, closeConfirm
     }}>
       {children}
     </StoreContext.Provider>

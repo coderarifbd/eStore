@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export const PurchaseVoucher = () => {
-  const { lang, products, categories, suppliers, purchases, addPurchaseVoucher, updatePurchaseVoucher, deletePurchaseVoucher, addProduct } = useStore();
+  const { lang, products, categories, suppliers, purchases, addPurchaseVoucher, updatePurchaseVoucher, deletePurchaseVoucher, addProduct, showConfirm } = useStore();
   const isBn = lang === 'bn';
 
   // Screen View Switcher: 'voucher' (New Voucher Entry) vs 'history' (Past Purchase Invoices Archive)
@@ -929,8 +929,14 @@ export const PurchaseVoucher = () => {
 
                             {/* Delete Voucher & Revert Stock */}
                             <button
-                              onClick={() => {
-                                if (window.confirm(isBn ? `আপনি কি নিশ্চিত যে ক্রয় ভাউচার ${vouch.id} মুছে ফেলতে চান? ইনভেন্টরি থেকে পণ্যের স্টক স্বয়ংক্রিয়ভাবে কমে যাবে।` : 'Delete purchase voucher and revert stock?')) {
+                              onClick={async () => {
+                                const confirmed = await showConfirm({
+                                  title: isBn ? 'ক্রয় ভাউচার মুছে ফেলা' : 'Delete Purchase Voucher',
+                                  message: isBn ? `আপনি কি নিশ্চিত যে ক্রয় ভাউচার ${vouch.id} মুছে ফেলতে চান? ইনভেন্টরি থেকে পণ্যের স্টক স্বয়ংক্রিয়ভাবে কমে যাবে।` : `Delete purchase voucher ${vouch.id} and revert stock?`,
+                                  type: 'danger',
+                                  confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                                });
+                                if (confirmed) {
                                   deletePurchaseVoucher(vouch.id);
                                 }
                               }}

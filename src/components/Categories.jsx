@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export const Categories = () => {
-  const { lang, categories, products, addCategory, deleteCategory, updateCategory } = useStore();
+  const { lang, categories, products, addCategory, deleteCategory, updateCategory, showConfirm } = useStore();
   const isBn = lang === 'bn';
 
   const [nameBn, setNameBn] = useState('');
@@ -208,8 +208,14 @@ export const Categories = () => {
                   </button>
 
                   <button
-                    onClick={() => {
-                      if (window.confirm(isBn ? `আপনি কি নিশ্চিত যে "${cat.nameBn}" ক্যাটাগরি মুছে ফেলতে চান?` : `Delete category?`)) {
+                    onClick={async () => {
+                      const confirmed = await showConfirm({
+                        title: isBn ? 'ক্যাটাগরি মুছে ফেলা' : 'Delete Category',
+                        message: isBn ? `আপনি কি নিশ্চিত যে "${cat.nameBn}" ক্যাটাগরি মুছে ফেলতে চান?` : `Delete category "${cat.nameEn || cat.nameBn}"?`,
+                        type: 'danger',
+                        confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                      });
+                      if (confirmed) {
                         deleteCategory(cat.id);
                       }
                     }}
@@ -263,8 +269,14 @@ export const Categories = () => {
                           </button>
 
                           <button
-                            onClick={() => {
-                              if (window.confirm(isBn ? `আপনি কি নিশ্চিত যে "${cat.nameBn}" ক্যাটাগরি মুছে ফেলতে চান?` : `Delete category?`)) {
+                            onClick={async () => {
+                              const confirmed = await showConfirm({
+                                title: isBn ? 'ক্যাটাগরি মুছে ফেলা' : 'Delete Category',
+                                message: isBn ? `আপনি কি নিশ্চিত যে "${cat.nameBn}" ক্যাটাগরি মুছে ফেলতে চান?` : `Delete category "${cat.nameEn || cat.nameBn}"?`,
+                                type: 'danger',
+                                confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                              });
+                              if (confirmed) {
                                 deleteCategory(cat.id);
                               }
                             }}
