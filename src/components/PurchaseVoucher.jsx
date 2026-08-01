@@ -18,7 +18,7 @@ import {
   X
 } from 'lucide-react';
 
-const SearchableVariantDropdown = ({ options = [], value, onChange, disabled, isBn, placeholder }) => {
+const SearchableSelectDropdown = ({ options = [], value, onChange, disabled, isBn, placeholder, searchPlaceholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef(null);
@@ -39,8 +39,8 @@ const SearchableVariantDropdown = ({ options = [], value, onChange, disabled, is
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
-      o.label.toLowerCase().includes(q) ||
-      o.displaySpec.toLowerCase().includes(q) ||
+      (o.label && o.label.toLowerCase().includes(q)) ||
+      (o.displaySpec && o.displaySpec.toLowerCase().includes(q)) ||
       (o.brand && o.brand.toLowerCase().includes(q))
     );
   });
@@ -73,7 +73,7 @@ const SearchableVariantDropdown = ({ options = [], value, onChange, disabled, is
         <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {selectedOption
             ? selectedOption.label
-            : (placeholder || (isBn ? '-- ভেরিয়েন্ট নির্বাচন করুন --' : '-- Select Variant Spec --'))}
+            : (placeholder || (isBn ? '-- নির্বাচন করুন --' : '-- Select --'))}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
           {selectedOption && !disabled && (
@@ -114,7 +114,7 @@ const SearchableVariantDropdown = ({ options = [], value, onChange, disabled, is
             <input
               type="text"
               autoFocus
-              placeholder={isBn ? 'টাইপ করে ভেরিয়েন্ট খুঁজুন (যেমন: Switch, ERICSON)...' : 'Type to search variation...'}
+              placeholder={searchPlaceholder || (isBn ? 'টাইপ করে খুঁজুন...' : 'Type to search...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
@@ -163,16 +163,18 @@ const SearchableVariantDropdown = ({ options = [], value, onChange, disabled, is
                       if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
-                    <span style={{ fontWeight: 600 }}>{opt.displaySpec}</span>
-                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: '0.5rem' }}>
-                      (কিনা: ৳{opt.purchasePrice} • বিক্রি: ৳{opt.sellingPrice})
-                    </span>
+                    <span style={{ fontWeight: 600 }}>{opt.displaySpec || opt.label}</span>
+                    {opt.subText && (
+                      <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: '0.5rem' }}>
+                        {opt.subText}
+                      </span>
+                    )}
                   </div>
                 );
               })
             ) : (
               <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: '#94a3b8', textAlign: 'center' }}>
-                {isBn ? 'কোনো ভেরিয়েন্ট পাওয়া যায়নি' : 'No matching variation found'}
+                {isBn ? 'কোনো ফলাফল পাওয়া যায়নি' : 'No matching item found'}
               </div>
             )}
           </div>
@@ -643,25 +645,27 @@ export const PurchaseVoucher = () => {
                 {/* Product Select */}
                 <div className="form-group">
                   <label className="form-label">{isBn ? 'পণ্য নির্বাচন করুন' : 'Select Product'}</label>
-                  <select
-                    className="select-control"
+                  <SearchableSelectDropdown
+                    options={products.map(p => ({
+                      value: p.id,
+                      label: p.nameBn,
+                      subText: p.brand ? `(${p.brand})` : ''
+                    }))}
                     value={selectedProdId}
-                    onChange={(e) => {
-                      setSelectedProdId(e.target.value);
+                    isBn={isBn}
+                    placeholder={isBn ? '-- পণ্য নির্বাচন করুন --' : '-- Select Product --'}
+                    searchPlaceholder={isBn ? 'টাইপ করে পণ্য খুঁজুন (যেমন: ক্যাবল, সুইচ, বাল্ব)...' : 'Type to search product...'}
+                    onChange={(val) => {
+                      setSelectedProdId(val);
                       setSelectedVarId('');
                     }}
-                  >
-                    <option value="">{isBn ? '-- পণ্য নির্বাচন করুন --' : '-- Select Product --'}</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>{p.nameBn}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 {/* Variant Select */}
                 <div className="form-group">
                   <label className="form-label">{isBn ? 'সুনির্দিষ্ট ভেরিয়েন্ট (সাইজ / ওয়াট)' : 'Select Variation'}</label>
-                  <SearchableVariantDropdown
+                  <SearchableSelectDropdown
                     options={(() => {
                       if (!activeProduct || !activeProduct.variants) return [];
                       const brandList = activeProduct.brand
@@ -681,9 +685,8 @@ export const PurchaseVoucher = () => {
                               brand: b,
                               spec: v.spec,
                               displaySpec,
-                              purchasePrice: v.purchasePrice || 0,
-                              sellingPrice: v.sellingPrice || 0,
-                              label: `${displaySpec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
+                              label: `${displaySpec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`,
+                              subText: `(কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
                             });
                           });
                         });
@@ -695,9 +698,8 @@ export const PurchaseVoucher = () => {
                             brand: '',
                             spec: v.spec,
                             displaySpec: v.spec,
-                            purchasePrice: v.purchasePrice || 0,
-                            sellingPrice: v.sellingPrice || 0,
-                            label: `${v.spec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
+                            label: `${v.spec} (কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`,
+                            subText: `(কিনা: ৳${v.purchasePrice || 0} • বিক্রি: ৳${v.sellingPrice || 0})`
                           });
                         });
                       }
@@ -706,6 +708,8 @@ export const PurchaseVoucher = () => {
                     value={selectedVarId}
                     disabled={!selectedProdId}
                     isBn={isBn}
+                    placeholder={isBn ? '-- ভেরিয়েন্ট নির্বাচন করুন --' : '-- Select Variant Spec --'}
+                    searchPlaceholder={isBn ? 'টাইপ করে ভেরিয়েন্ট খুঁজুন (যেমন: Switch, ERICSON)...' : 'Type to search variation...'}
                     onChange={(val) => {
                       setSelectedVarId(val);
                       let realVarId = val;
@@ -1247,22 +1251,23 @@ export const PurchaseVoucher = () => {
                   </label>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 75px 90px 90px auto', gap: '0.4rem', alignItems: 'center' }}>
-                    <select
-                      className="select-control"
+                    <SearchableSelectDropdown
+                      options={products.map(p => ({
+                        value: p.id,
+                        label: p.nameBn,
+                        subText: p.brand ? `(${p.brand})` : ''
+                      }))}
                       value={editModalProdId}
-                      onChange={(e) => {
-                        setEditModalProdId(e.target.value);
+                      isBn={isBn}
+                      placeholder={isBn ? '-- পণ্য --' : '-- Product --'}
+                      searchPlaceholder={isBn ? 'পণ্য খুঁজুন...' : 'Search product...'}
+                      onChange={(val) => {
+                        setEditModalProdId(val);
                         setEditModalVarId('');
                       }}
-                      style={{ padding: '0.4rem', fontSize: '0.85rem' }}
-                    >
-                      <option value="">{isBn ? '-- পণ্য --' : '-- Product --'}</option>
-                      {products.map(p => (
-                        <option key={p.id} value={p.id}>{p.nameBn}</option>
-                      ))}
-                    </select>
+                    />
 
-                    <SearchableVariantDropdown
+                    <SearchableSelectDropdown
                       options={(() => {
                         if (!activeEditModalProduct || !activeEditModalProduct.variants) return [];
                         const brandList = activeEditModalProduct.brand
@@ -1282,9 +1287,8 @@ export const PurchaseVoucher = () => {
                                 brand: b,
                                 spec: v.spec,
                                 displaySpec,
-                                purchasePrice: v.purchasePrice || 0,
-                                sellingPrice: v.sellingPrice || 0,
-                                label: `${displaySpec} (৳${v.purchasePrice})`
+                                label: `${displaySpec} (৳${v.purchasePrice})`,
+                                subText: `(৳${v.purchasePrice})`
                               });
                             });
                           });
@@ -1296,9 +1300,8 @@ export const PurchaseVoucher = () => {
                               brand: '',
                               spec: v.spec,
                               displaySpec: v.spec,
-                              purchasePrice: v.purchasePrice || 0,
-                              sellingPrice: v.sellingPrice || 0,
-                              label: `${v.spec} (৳${v.purchasePrice})`
+                              label: `${v.spec} (৳${v.purchasePrice})`,
+                              subText: `(৳${v.purchasePrice})`
                             });
                           });
                         }
