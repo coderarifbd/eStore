@@ -149,20 +149,20 @@ export const UserManagement = () => {
 
       {/* Add User Form */}
       {showAddForm && (
-        <div className="card" style={{ marginBottom: '1.5rem', padding: '1.25rem', borderLeft: '4px solid #06b6d4' }}>
+        <form onSubmit={handleCreateUser} className="card" style={{ marginBottom: '1.5rem', padding: '1.25rem', borderLeft: '4px solid #06b6d4' }}>
           <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', marginBottom: '1rem' }}>নতুন ইউজার তৈরি করুন</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div>
               <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.3rem' }}>ইউজারনেম *</label>
-              <input style={inputStyle} value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} placeholder="username" />
+              <input style={inputStyle} value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} placeholder="username" required />
             </div>
             <div>
               <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.3rem' }}>পাসওয়ার্ড *</label>
-              <input style={inputStyle} type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="password" />
+              <input style={inputStyle} type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="password" required />
             </div>
             <div>
-              <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.3rem' }}>নাম</label>
-              <input style={inputStyle} value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="কর্মচারীর নাম" />
+              <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.3rem' }}>নাম *</label>
+              <input style={inputStyle} value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="কর্মচারীর নাম" required />
             </div>
             <div>
               <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.3rem' }}>রোল</label>
@@ -177,14 +177,14 @@ export const UserManagement = () => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-            <button className="btn btn-primary" onClick={addUser} style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}>
+            <button type="submit" className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}>
               তৈরি করুন
             </button>
-            <button className="btn btn-secondary" onClick={() => setShowAddForm(false)} style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowAddForm(false)} style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
               বাতিল
             </button>
           </div>
-        </div>
+        </form>
       )}
 
       {/* Change Password Modal */}
