@@ -447,6 +447,7 @@ export const Inventory = () => {
   // Compact View Mode & Accordion Expand States
   const [viewDensity, setViewDensity] = useState('compact');
   const [expandedProductIds, setExpandedProductIds] = useState({});
+  const [variantSearchQueries, setVariantSearchQueries] = useState({});
 
   const toggleExpandProduct = (prodId) => {
     setExpandedProductIds(prev => ({
@@ -1045,9 +1046,6 @@ export const Inventory = () => {
 
                     <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <span>{isBn ? prod.nameBn : prod.nameEn}</span>
-                      {(prod.brand || '').split(',').map(b => b.trim()).filter(Boolean).map((b, i) => (
-                        <span key={i} className="badge badge-purple" style={{ fontSize: '0.75rem', padding: '1px 6px' }}>{b}</span>
-                      ))}
                       
                       <span style={{ fontSize: '0.775rem', color: '#94a3b8', fontWeight: 400 }}>
                         • {isBn ? cat?.nameBn : cat?.nameEn}
@@ -1131,120 +1129,169 @@ export const Inventory = () => {
                   </div>
                 </div>
 
-                {/* Collapsible Variant Table */}
-                {isExpanded && (
-                  <div className="table-container" style={{ marginTop: '0.5rem' }}>
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>{isBn ? `ভেরিয়েন্ট অপশন (${prod.variationTypeName || 'কম্বিনেশন'})` : 'Variation Option'}</th>
-                          <th>SKU Code</th>
-                          <th style={{ color: '#f59e0b' }}>{isBn ? 'কিনা দাম (ক্রয়মূল্য)' : 'Purchase Rate'}</th>
-                          <th style={{ color: '#10b981' }}>{isBn ? 'বিক্রি দাম (বিক্রয়মূল্য)' : 'Selling Rate'}</th>
-                          <th>{isBn ? 'বর্তমান স্টক' : 'Stock'}</th>
-                          <th style={{ textAlign: 'right' }}>{isBn ? 'অ্যাকশন' : 'Action'}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(prod.variants || []).map(varItem => {
-                          const isLow = varItem.stock <= varItem.reorderLevel;
-                          return (
-                            <tr key={varItem.id}>
-                              <td style={{ fontWeight: 600, color: varItem.spec ? '#06b6d4' : '#94a3b8' }}>
-                                {varItem.spec && !/^Option-\d+$/i.test(varItem.spec.trim()) && varItem.spec.trim().toLowerCase() !== 'standard'
-                                  ? varItem.spec
-                                  : (isBn ? 'মূল পণ্য (স্ট্যান্ডার্ড)' : 'Standard / Base')}
-                              </td>
+                {/* Collapsible Variant Table with Search Filter */}
+                {isExpanded && (() => {
+                  const varSearch = (variantSearchQueries[prod.id] || '').trim().toLowerCase();
+                  const allVars = prod.variants || [];
+                  const displayedVariants = allVars.filter(v => {
+                    if (!varSearch) return true;
+                    const specStr = (v.spec || '').toLowerCase();
+                    const skuStr = (v.sku || '').toLowerCase();
+                    const brandStr = (v.brand || '').toLowerCase();
+                    return specStr.includes(varSearch) || skuStr.includes(varSearch) || brandStr.includes(varSearch);
+                  });
 
-                              <td style={{ fontSize: '0.825rem', color: '#94a3b8' }}>
-                                {varItem.sku}
-                              </td>
-                              <td style={{ fontWeight: 600, color: '#f59e0b', verticalAlign: 'top' }}>
-                                <div>৳{varItem.purchasePrice} / {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit}</div>
-                                {varItem.batches && varItem.batches.filter(b => b.remainingQuantity > 0).length > 1 && (
-                                  <div style={{ marginTop: '6px', fontSize: '0.75rem', fontWeight: 'normal', color: '#94a3b8' }}>
-                                    {varItem.batches.filter(b => b.remainingQuantity > 0).map((b, idx) => (
-                                      <div key={idx} style={{ display: 'flex', gap: '4px', whiteSpace: 'nowrap', marginTop: '2px' }}>
-                                        • ৳{b.purchasePrice} ({b.remainingQuantity} {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit})
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ fontWeight: 700, color: '#10b981', verticalAlign: 'top' }}>
-                                <div>৳{varItem.sellingPrice} / {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit}</div>
-                                {varItem.batches && varItem.batches.filter(b => b.remainingQuantity > 0).length > 1 && (
-                                  <div style={{ marginTop: '6px', fontSize: '0.75rem', fontWeight: 'normal', color: '#64748b' }}>
-                                    {varItem.batches.filter(b => b.remainingQuantity > 0).map((b, idx) => (
-                                      <div key={idx} style={{ marginTop: '2px', whiteSpace: 'nowrap' }}>
-                                        • ৳{b.sellingPrice}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ verticalAlign: 'top' }}>
-                                <div>
-                                  {isLow ? (
-                                    <span className="badge badge-amber">
-                                      <AlertTriangle size={12} /> {varItem.stock} {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit}
-                                    </span>
-                                  ) : (
-                                    <span className="badge badge-green">
-                                      {varItem.stock} {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit}
-                                    </span>
-                                  )}
-                                </div>
-                                {varItem.batches && varItem.batches.filter(b => b.remainingQuantity > 0).length > 1 && (
-                                  <div style={{ marginTop: '6px', fontSize: '0.725rem', color: '#64748b' }}>
-                                    {varItem.batches.filter(b => b.remainingQuantity > 0).map((b, idx) => (
-                                      <div key={idx} style={{ whiteSpace: 'nowrap', marginTop: '2px' }}>
-                                        • {b.remainingQuantity} {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit} <span style={{ color: '#06b6d4' }}>({b.purchaseVoucherId === 'initial' ? (isBn ? 'ওপেনিং' : 'Init') : b.purchaseVoucherId})</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ textAlign: 'right' }}>
-                                <div style={{ display: 'inline-flex', gap: '4px' }}>
-                                  <button
-                                    onClick={() => setEditingVariant({ productId: prod.id, variant: { ...varItem } })}
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ padding: '0.25rem 0.45rem' }}
-                                    title="এডিট করুন"
-                                  >
-                                    <Edit3 size={14} />
-                                  </button>
-                                  {(prod.variants || []).length > 1 && (
-                                    <button
-                                      onClick={async (e) => {
-                                        e.stopPropagation();
-                                        const confirmed = await showConfirm({
-                                          title: isBn ? 'ভেরিয়েন্ট মুছে ফেলা' : 'Delete Variant',
-                                          message: isBn ? 'এই ভেরিয়েন্ট অপশনটি মুছে ফেলতে চান?' : 'Delete this variant?',
-                                          type: 'danger',
-                                          confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
-                                        });
-                                        if (confirmed) {
-                                          deleteVariantFromProduct(prod.id, varItem.id);
-                                        }
-                                      }}
-                                      className="btn btn-secondary btn-sm"
-                                      style={{ padding: '0.25rem 0.45rem', color: '#f43f5e' }}
-                                      title="ভেরিয়েন্ট ডিলিট"
-                                    >
-                                      <Trash2 size={14} />
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
+                  return (
+                    <div style={{ marginTop: '0.75rem', backgroundColor: '#0f172a', padding: '0.85rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      {/* Variation Search Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ position: 'relative', width: '260px' }}>
+                          <input
+                            type="text"
+                            className="input-control"
+                            placeholder={isBn ? 'ভেরিয়েন্ট / ব্র্যান্ড সার্চ করুন...' : 'Search variation or brand...'}
+                            value={variantSearchQueries[prod.id] || ''}
+                            onChange={(e) => setVariantSearchQueries(prev => ({ ...prev, [prod.id]: e.target.value }))}
+                            style={{ padding: '0.35rem 0.6rem 0.35rem 2.2rem', fontSize: '0.825rem', backgroundColor: '#1e293b', borderColor: '#334155' }}
+                          />
+                          <Search size={14} color="#06b6d4" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
+                          {variantSearchQueries[prod.id] && (
+                            <X 
+                              size={14} 
+                              color="#94a3b8" 
+                              onClick={() => setVariantSearchQueries(prev => ({ ...prev, [prod.id]: '' }))} 
+                              style={{ position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }} 
+                            />
+                          )}
+                        </div>
+
+                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                          {isBn ? `মোট ${allVars.length}টির মধ্যে ${displayedVariants.length}টি দেখাচ্ছে` : `Showing ${displayedVariants.length} of ${allVars.length} variations`}
+                        </div>
+                      </div>
+
+                      {/* Collapsible Variant Table */}
+                      <div className="table-container">
+                        <table className="data-table">
+                          <thead>
+                            <tr>
+                              <th>{isBn ? `ভেরিয়েন্ট অপশন (${prod.variationTypeName || 'কম্বিনেশন'})` : 'Variation Option'}</th>
+                              <th>SKU Code</th>
+                              <th style={{ color: '#f59e0b' }}>{isBn ? 'কিনা দাম (ক্রয়মূল্য)' : 'Purchase Rate'}</th>
+                              <th style={{ color: '#10b981' }}>{isBn ? 'বিক্রি দাম (বিক্রয়মূল্য)' : 'Selling Rate'}</th>
+                              <th>{isBn ? 'বর্তমান স্টক' : 'Stock'}</th>
+                              <th style={{ textAlign: 'right' }}>{isBn ? 'অ্যাকশন' : 'Action'}</th>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                          </thead>
+                          <tbody>
+                            {displayedVariants.map(varItem => {
+                              const isLow = varItem.stock <= varItem.reorderLevel;
+                              return (
+                                <tr key={varItem.id}>
+                                  <td style={{ fontWeight: 600, color: varItem.spec ? '#06b6d4' : '#94a3b8' }}>
+                                    {varItem.spec && !/^Option-\d+$/i.test(varItem.spec.trim()) && varItem.spec.trim().toLowerCase() !== 'standard'
+                                      ? varItem.spec
+                                      : (isBn ? 'মূল পণ্য (স্ট্যান্ডার্ড)' : 'Standard / Base')}
+                                  </td>
+
+                                  <td style={{ fontSize: '0.825rem', color: '#94a3b8' }}>
+                                    {varItem.sku}
+                                  </td>
+                                  <td style={{ fontWeight: 600, color: '#f59e0b', verticalAlign: 'top' }}>
+                                    <div>৳{varItem.purchasePrice} / {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit}</div>
+                                    {varItem.batches && varItem.batches.filter(b => b.remainingQuantity > 0).length > 1 && (
+                                      <div style={{ marginTop: '6px', fontSize: '0.75rem', fontWeight: 'normal', color: '#94a3b8' }}>
+                                        {varItem.batches.filter(b => b.remainingQuantity > 0).map((b, idx) => (
+                                          <div key={idx} style={{ display: 'flex', gap: '4px', whiteSpace: 'nowrap', marginTop: '2px' }}>
+                                            • ৳{b.purchasePrice} ({b.remainingQuantity} {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit})
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td style={{ fontWeight: 700, color: '#10b981', verticalAlign: 'top' }}>
+                                    <div>৳{varItem.sellingPrice} / {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit}</div>
+                                    {varItem.batches && varItem.batches.filter(b => b.remainingQuantity > 0).length > 1 && (
+                                      <div style={{ marginTop: '6px', fontSize: '0.75rem', fontWeight: 'normal', color: '#64748b' }}>
+                                        {varItem.batches.filter(b => b.remainingQuantity > 0).map((b, idx) => (
+                                          <div key={idx} style={{ marginTop: '2px', whiteSpace: 'nowrap' }}>
+                                            • ৳{b.sellingPrice}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td style={{ verticalAlign: 'top' }}>
+                                    <div>
+                                      {isLow ? (
+                                        <span className="badge badge-amber">
+                                          <AlertTriangle size={12} /> {varItem.stock} {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit}
+                                        </span>
+                                      ) : (
+                                        <span className="badge badge-green">
+                                          {varItem.stock} {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {varItem.batches && varItem.batches.filter(b => b.remainingQuantity > 0).length > 1 && (
+                                      <div style={{ marginTop: '6px', fontSize: '0.725rem', color: '#64748b' }}>
+                                        {varItem.batches.filter(b => b.remainingQuantity > 0).map((b, idx) => (
+                                          <div key={idx} style={{ whiteSpace: 'nowrap', marginTop: '2px' }}>
+                                            • {b.remainingQuantity} {prod.unit === 'Goj' ? (isBn ? 'গজ' : 'Yard') : prod.unit} <span style={{ color: '#06b6d4' }}>({b.purchaseVoucherId === 'initial' ? (isBn ? 'ওপেনিং' : 'Init') : b.purchaseVoucherId})</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td style={{ textAlign: 'right' }}>
+                                    <div style={{ display: 'inline-flex', gap: '4px' }}>
+                                      <button
+                                        onClick={() => setEditingVariant({ productId: prod.id, variant: { ...varItem } })}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ padding: '0.25rem 0.45rem' }}
+                                        title="এডিট করুন"
+                                      >
+                                        <Edit3 size={14} />
+                                      </button>
+                                      {(prod.variants || []).length > 1 && (
+                                        <button
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            const confirmed = await showConfirm({
+                                              title: isBn ? 'ভেরিয়েন্ট মুছে ফেলা' : 'Delete Variant',
+                                              message: isBn ? 'এই ভেরিয়েন্ট অপশনটি মুছে ফেলতে চান?' : 'Delete this variant?',
+                                              type: 'danger',
+                                              confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                                            });
+                                            if (confirmed) {
+                                              deleteVariantFromProduct(prod.id, varItem.id);
+                                            }
+                                          }}
+                                          className="btn btn-secondary btn-sm"
+                                          style={{ padding: '0.25rem 0.45rem', color: '#f43f5e' }}
+                                          title="ভেরিয়েন্ট ডিলিট"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            {displayedVariants.length === 0 && (
+                              <tr>
+                                <td colSpan="6" style={{ textAlign: 'center', padding: '1.5rem', color: '#94a3b8' }}>
+                                  {isBn ? `"${variantSearchQueries[prod.id]}" নামে কোনো ভেরিয়েন্ট পাওয়া যায়নি` : `No variation found matching "${variantSearchQueries[prod.id]}"`}
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })
