@@ -930,7 +930,43 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
       if (p.id === productId) {
         return {
           ...p,
-          variants: p.variants.map(v => v.id === variantId ? { ...v, ...updatedFields } : v)
+          variants: p.variants.map(v => {
+            if (v.id !== variantId) return v;
+
+            const nextVariant = { ...v, ...updatedFields };
+
+            // If stock, purchasePrice, or sellingPrice were updated, sync batches
+            if ('stock' in updatedFields || 'purchasePrice' in updatedFields || 'sellingPrice' in updatedFields) {
+              const newStock = Number(nextVariant.stock || 0);
+              const newPurchasePrice = Number(nextVariant.purchasePrice || 0);
+              const newSellingPrice = Number(nextVariant.sellingPrice || 0);
+
+              const existingBatches = v.batches && v.batches.length > 0 ? [...v.batches] : [];
+
+              if (existingBatches.length > 0) {
+                existingBatches[existingBatches.length - 1] = {
+                  ...existingBatches[existingBatches.length - 1],
+                  quantity: newStock,
+                  remainingQuantity: newStock,
+                  purchasePrice: newPurchasePrice,
+                  sellingPrice: newSellingPrice
+                };
+                nextVariant.batches = existingBatches;
+              } else {
+                nextVariant.batches = [{
+                  id: `b_init_${v.id}`,
+                  purchaseVoucherId: 'initial',
+                  quantity: newStock,
+                  remainingQuantity: newStock,
+                  purchasePrice: newPurchasePrice,
+                  sellingPrice: newSellingPrice,
+                  date: new Date().toISOString().split('T')[0]
+                }];
+              }
+            }
+
+            return nextVariant;
+          })
         };
       }
       return p;

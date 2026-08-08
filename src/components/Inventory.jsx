@@ -1794,18 +1794,19 @@ export const Inventory = () => {
         </div>
       )}
 
-      {/* Modal: Edit Single Variation Option */}
+      {/* Modal: Edit Single Variation Option & Direct Stock/Price Adjust */}
       {editingVariant && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-content" style={{ maxWidth: '550px' }}>
             <div className="modal-header">
-              <h3>{isBn ? 'ভেরিয়েন্ট অপশন এডিট' : 'Edit Variation Option'}</h3>
+              <h3>{isBn ? 'ইনভেন্টরি ভেরিয়েন্ট ও স্টক এডিট' : 'Edit Variation & Stock Details'}</h3>
               <button onClick={() => setEditingVariant(null)} className="btn btn-secondary btn-sm">✕</button>
             </div>
             <form onSubmit={handleSaveVariantEdit}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                {/* Option Name Spec */}
                 <div className="form-group">
-                  <label className="form-label">{isBn ? 'অপশন নাম / স্পেক' : 'Option Title'}</label>
+                  <label className="form-label">{isBn ? 'ভেরিয়েন্ট অপশন নাম / স্পেক' : 'Option Title / Spec'}</label>
                   <input
                     type="text"
                     className="input-control"
@@ -1814,12 +1815,100 @@ export const Inventory = () => {
                       ...editingVariant,
                       variant: { ...editingVariant.variant, spec: e.target.value }
                     })}
+                    placeholder={isBn ? 'যেমন: 1.0 rm - লাল' : 'e.g. 1.0rm - Red'}
                   />
+                </div>
+
+                {/* SKU Code */}
+                <div className="form-group">
+                  <label className="form-label">{isBn ? 'SKU কোড (SKU Code)' : 'SKU Code'}</label>
+                  <input
+                    type="text"
+                    className="input-control"
+                    value={editingVariant.variant.sku || ''}
+                    onChange={(e) => setEditingVariant({
+                      ...editingVariant,
+                      variant: { ...editingVariant.variant, sku: e.target.value }
+                    })}
+                    placeholder="e.g. BRB-BYA-1.0"
+                  />
+                </div>
+
+                {/* Purchase Rate & Selling Rate Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: '#f59e0b', fontWeight: 600 }}>
+                      {isBn ? 'কিনা দাম (ক্রয়মূল্য ৳)' : 'Purchase Rate (৳)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      className="input-control"
+                      value={editingVariant.variant.purchasePrice ?? ''}
+                      onChange={(e) => setEditingVariant({
+                        ...editingVariant,
+                        variant: { ...editingVariant.variant, purchasePrice: e.target.value }
+                      })}
+                      style={{ borderColor: '#f59e0b', fontWeight: 600 }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: '#10b981', fontWeight: 600 }}>
+                      {isBn ? 'বিক্রি দাম (বিক্রয়মূল্য ৳)' : 'Selling Rate (৳)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      className="input-control"
+                      value={editingVariant.variant.sellingPrice ?? ''}
+                      onChange={(e) => setEditingVariant({
+                        ...editingVariant,
+                        variant: { ...editingVariant.variant, sellingPrice: e.target.value }
+                      })}
+                      style={{ borderColor: '#10b981', fontWeight: 600 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Stock & Reorder Level Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: '#06b6d4', fontWeight: 600 }}>
+                      {isBn ? 'বর্তমান স্টক (Current Stock)' : 'Current Stock'}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      className="input-control"
+                      value={editingVariant.variant.stock ?? ''}
+                      onChange={(e) => setEditingVariant({
+                        ...editingVariant,
+                        variant: { ...editingVariant.variant, stock: e.target.value }
+                      })}
+                      style={{ borderColor: '#06b6d4', fontWeight: 700 }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: '#f43f5e', fontWeight: 600 }}>
+                      {isBn ? 'কম স্টক অ্যালার্ট লেভেল' : 'Reorder Alert Level'}
+                    </label>
+                    <input
+                      type="number"
+                      className="input-control"
+                      value={editingVariant.variant.reorderLevel ?? 5}
+                      onChange={(e) => setEditingVariant({
+                        ...editingVariant,
+                        variant: { ...editingVariant.variant, reorderLevel: e.target.value }
+                      })}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" onClick={() => setEditingVariant(null)} className="btn btn-secondary">{isBn ? 'বাতিল' : 'Cancel'}</button>
-                <button type="submit" className="btn btn-primary">{isBn ? 'আপডেট করুন' : 'Update Option'}</button>
+                <button type="submit" className="btn btn-primary">{isBn ? 'ইনভেন্টরি তথ্য সেভ করুন' : 'Save Details'}</button>
               </div>
             </form>
           </div>
