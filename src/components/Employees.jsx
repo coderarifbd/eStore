@@ -3,7 +3,7 @@ import { useStore } from '../context/StoreContext';
 import { Users, PlusCircle, DollarSign, Calendar, Printer, CheckCircle, HandCoins, Edit3, Trash2 } from 'lucide-react';
 
 export const Employees = () => {
-  const { lang, employees, salaryTx, addEmployee, updateEmployee, deleteEmployee, addSalaryTransaction, setPrintDoc, showConfirm } = useStore();
+  const { lang, employees, salaryTx, addEmployee, updateEmployee, deleteEmployee, addSalaryTransaction, setPrintDoc, showConfirm, isAdmin } = useStore();
   const isBn = lang === 'bn';
 
   // Modals
@@ -150,34 +150,36 @@ export const Employees = () => {
                   <span className={`badge ${emp.status === 'Inactive' ? 'badge-amber' : 'badge-green'}`}>
                     {emp.status === 'Inactive' ? (isBn ? 'নিষ্ক্রিয়' : 'Inactive') : (isBn ? 'সক্রিয়' : 'Active')}
                   </span>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <button
-                      onClick={() => handleStartEditEmployee(emp)}
-                      className="btn btn-secondary btn-sm"
-                      style={{ padding: '0.25rem 0.4rem' }}
-                      title={isBn ? 'কর্মচারী এডিট করুন' : 'Edit Employee'}
-                    >
-                      <Edit3 size={13} />
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const confirmed = await showConfirm({
-                          title: isBn ? 'কর্মচারী মুছে ফেলা' : 'Delete Employee',
-                          message: isBn ? `আপনি কি নিশ্চিত যে কর্মচারী ${emp.name} কে মুছে ফেলতে চান?` : `Are you sure you want to delete employee ${emp.name}?`,
-                          type: 'danger',
-                          confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
-                        });
-                        if (confirmed) {
-                          deleteEmployee(emp.id);
-                        }
-                      }}
-                      className="btn btn-secondary btn-sm"
-                      style={{ padding: '0.25rem 0.4rem', color: '#f43f5e' }}
-                      title={isBn ? 'কর্মচারী মুছুন' : 'Delete Employee'}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
+                  {isAdmin && (
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        onClick={() => handleStartEditEmployee(emp)}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.25rem 0.4rem' }}
+                        title={isBn ? 'কর্মচারী এডিট করুন' : 'Edit Employee'}
+                      >
+                        <Edit3 size={13} />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const confirmed = await showConfirm({
+                            title: isBn ? 'কর্মচারী মুছে ফেলা' : 'Delete Employee',
+                            message: isBn ? `আপনি কি নিশ্চিত যে কর্মচারী ${emp.name} কে মুছে ফেলতে চান?` : `Are you sure you want to delete employee ${emp.name}?`,
+                            type: 'danger',
+                            confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                          });
+                          if (confirmed) {
+                            deleteEmployee(emp.id);
+                          }
+                        }}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.25rem 0.4rem', color: '#f43f5e' }}
+                        title={isBn ? 'কর্মচারী মুছুন' : 'Delete Employee'}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -435,7 +435,8 @@ export const Inventory = () => {
     updateVariantDetails,
     deleteVariantFromProduct,
     deleteProduct,
-    showConfirm
+    showConfirm,
+    isAdmin
   } = useStore();
 
   const isBn = lang === 'bn';
@@ -996,10 +997,12 @@ export const Inventory = () => {
               ))}
             </select>
 
-            <button onClick={() => { resetForm(); setShowAddProdModal(true); }} className="btn btn-primary">
-              <PlusCircle size={18} />
-              <span>{isBn ? '+ নতুন পণ্য যোগ করুন' : '+ Add Product'}</span>
-            </button>
+            {isAdmin && (
+              <button onClick={() => { resetForm(); setShowAddProdModal(true); }} className="btn btn-primary">
+                <PlusCircle size={18} />
+                <span>{isBn ? '+ নতুন পণ্য যোগ করুন' : '+ Add Product'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1062,71 +1065,73 @@ export const Inventory = () => {
                   </div>
 
                   {/* Compact Action Buttons with EDIT PRODUCT ICON BUTTON! */}
-                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                    {/* EDIT PRODUCT ICON BUTTON */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenEditProductModal(prod);
-                      }}
-                      className="btn btn-secondary btn-sm"
-                      style={{ padding: '0.35rem 0.5rem', color: '#f59e0b' }}
-                      title={isBn ? 'পণ্য ও এর সকল ভেরিয়েন্ট এডিট করুন (Edit Product & Variations)' : 'Edit Product & Variations'}
-                    >
-                      <Edit3 size={16} />
-                    </button>
+                  {isAdmin && (
+                    <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                      {/* EDIT PRODUCT ICON BUTTON */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEditProductModal(prod);
+                        }}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.35rem 0.5rem', color: '#f59e0b' }}
+                        title={isBn ? 'পণ্য ও এর সকল ভেরিয়েন্ট এডিট করুন (Edit Product & Variations)' : 'Edit Product & Variations'}
+                      >
+                        <Edit3 size={16} />
+                      </button>
 
-                    {/* Duplicate Symbol Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetProduct(prod);
-                        setShowDuplicateModal(true);
-                      }}
-                      className="btn btn-secondary btn-sm"
-                      style={{ padding: '0.35rem 0.5rem', color: '#8b5cf6' }}
-                      title={isBn ? 'অন্য ব্র্যান্ডে ১-ক্লিকে কপি করুন (Duplicate to Brand)' : 'Duplicate to Brand'}
-                    >
-                      <Copy size={16} />
-                    </button>
+                      {/* Duplicate Symbol Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTargetProduct(prod);
+                          setShowDuplicateModal(true);
+                        }}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.35rem 0.5rem', color: '#8b5cf6' }}
+                        title={isBn ? 'অন্য ব্র্যান্ডে ১-ক্লিকে কপি করুন (Duplicate to Brand)' : 'Duplicate to Brand'}
+                      >
+                        <Copy size={16} />
+                      </button>
 
-                    {/* Add Option Symbol Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetProduct(prod);
-                        resetForm();
-                        setVariationOptions([{ spec: '', purchasePrice: 0, sellingPrice: 0, stock: 0, reorderLevel: 5 }]);
-                        setShowAddVariantModal(true);
-                      }}
-                      className="btn btn-primary btn-sm"
-                      style={{ padding: '0.35rem 0.5rem' }}
-                      title={isBn ? '+ নতুন ভেরিয়েন্ট অপশন যোগ (Add Variant Option)' : 'Add Variant Option'}
-                    >
-                      <Plus size={16} />
-                    </button>
+                      {/* Add Option Symbol Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTargetProduct(prod);
+                          resetForm();
+                          setVariationOptions([{ spec: '', purchasePrice: 0, sellingPrice: 0, stock: 0, reorderLevel: 5 }]);
+                          setShowAddVariantModal(true);
+                        }}
+                        className="btn btn-primary btn-sm"
+                        style={{ padding: '0.35rem 0.5rem' }}
+                        title={isBn ? '+ নতুন ভেরিয়েন্ট অপশন যোগ (Add Variant Option)' : 'Add Variant Option'}
+                      >
+                        <Plus size={16} />
+                      </button>
 
-                    {/* Delete Product Symbol Button */}
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        const confirmed = await showConfirm({
-                          title: isBn ? 'পণ্য মুছে ফেলা' : 'Delete Product',
-                          message: isBn ? 'আপনি কি নিশ্চিত যে এই সম্পূর্ণ পণ্যটি মুছে ফেলতে চান?' : 'Delete this product?',
-                          type: 'danger',
-                          confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
-                        });
-                        if (confirmed) {
-                          deleteProduct(prod.id);
-                        }
-                      }}
-                      className="btn btn-secondary btn-sm"
-                      style={{ padding: '0.35rem 0.5rem', color: '#f43f5e' }}
-                      title={isBn ? 'পণ্য মুছে ফেলুন (Delete Product)' : 'Delete Product'}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                      {/* Delete Product Symbol Button */}
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const confirmed = await showConfirm({
+                            title: isBn ? 'পণ্য মুছে ফেলা' : 'Delete Product',
+                            message: isBn ? 'আপনি কি নিশ্চিত যে এই সম্পূর্ণ পণ্যটি মুছে ফেলতে চান?' : 'Delete this product?',
+                            type: 'danger',
+                            confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                          });
+                          if (confirmed) {
+                            deleteProduct(prod.id);
+                          }
+                        }}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.35rem 0.5rem', color: '#f43f5e' }}
+                        title={isBn ? 'পণ্য মুছে ফেলুন (Delete Product)' : 'Delete Product'}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Collapsible Variant Table with Search Filter */}
@@ -1244,37 +1249,41 @@ export const Inventory = () => {
                                     )}
                                   </td>
                                   <td style={{ textAlign: 'right' }}>
-                                    <div style={{ display: 'inline-flex', gap: '4px' }}>
-                                      <button
-                                        onClick={() => setEditingVariant({ productId: prod.id, variant: { ...varItem } })}
-                                        className="btn btn-secondary btn-sm"
-                                        style={{ padding: '0.25rem 0.45rem' }}
-                                        title="এডিট করুন"
-                                      >
-                                        <Edit3 size={14} />
-                                      </button>
-                                      {(prod.variants || []).length > 1 && (
+                                    {isAdmin ? (
+                                      <div style={{ display: 'inline-flex', gap: '4px' }}>
                                         <button
-                                          onClick={async (e) => {
-                                            e.stopPropagation();
-                                            const confirmed = await showConfirm({
-                                              title: isBn ? 'ভেরিয়েন্ট মুছে ফেলা' : 'Delete Variant',
-                                              message: isBn ? 'এই ভেরিয়েন্ট অপশনটি মুছে ফেলতে চান?' : 'Delete this variant?',
-                                              type: 'danger',
-                                              confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
-                                            });
-                                            if (confirmed) {
-                                              deleteVariantFromProduct(prod.id, varItem.id);
-                                            }
-                                          }}
+                                          onClick={() => setEditingVariant({ productId: prod.id, variant: { ...varItem } })}
                                           className="btn btn-secondary btn-sm"
-                                          style={{ padding: '0.25rem 0.45rem', color: '#f43f5e' }}
-                                          title="ভেরিয়েন্ট ডিলিট"
+                                          style={{ padding: '0.25rem 0.45rem' }}
+                                          title="এডিট করুন"
                                         >
-                                          <Trash2 size={14} />
+                                          <Edit3 size={14} />
                                         </button>
-                                      )}
-                                    </div>
+                                        {(prod.variants || []).length > 1 && (
+                                          <button
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              const confirmed = await showConfirm({
+                                                title: isBn ? 'ভেরিয়েন্ট মুছে ফেলা' : 'Delete Variant',
+                                                message: isBn ? 'এই ভেরিয়েন্ট অপশনটি মুছে ফেলতে চান?' : 'Delete this variant?',
+                                                type: 'danger',
+                                                confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                                              });
+                                              if (confirmed) {
+                                                deleteVariantFromProduct(prod.id, varItem.id);
+                                              }
+                                            }}
+                                            className="btn btn-secondary btn-sm"
+                                            style={{ padding: '0.25rem 0.45rem', color: '#f43f5e' }}
+                                            title="ভেরিয়েন্ট ডিলিট"
+                                          >
+                                            <Trash2 size={14} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span style={{ color: '#64748b', fontSize: '0.8rem' }}>-</span>
+                                    )}
                                   </td>
                                 </tr>
                               );

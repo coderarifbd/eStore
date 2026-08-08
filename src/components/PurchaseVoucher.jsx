@@ -185,7 +185,20 @@ const SearchableSelectDropdown = ({ options = [], value, onChange, disabled, isB
 };
 
 export const PurchaseVoucher = () => {
-  const { lang, products, categories, suppliers, purchases, addPurchaseVoucher, updatePurchaseVoucher, deletePurchaseVoucher, addProduct, showConfirm } = useStore();
+  const { 
+    lang, 
+    products, 
+    suppliers, 
+    purchases, 
+    categories, 
+    brands, 
+    addPurchaseVoucher, 
+    updatePurchaseVoucher, 
+    deletePurchaseVoucher,
+    addProduct,
+    showConfirm,
+    isAdmin
+  } = useStore();
   const isBn = lang === 'bn';
 
   // Screen View Switcher: 'voucher' (New Voucher Entry) vs 'history' (Past Purchase Invoices Archive)
@@ -1065,35 +1078,39 @@ export const PurchaseVoucher = () => {
                               <span>{isBn ? 'বিবরণ' : 'View'}</span>
                             </button>
 
-                            {/* Edit Voucher Info */}
-                            <button
-                              onClick={() => setEditingVoucher({ ...vouch, items: JSON.parse(JSON.stringify(vouch.items || [])) })}
-                              className="btn btn-secondary btn-sm"
-                              style={{ padding: '0.35rem 0.55rem', color: '#f59e0b' }}
-                              title={isBn ? 'ভাউচারের আইটেম, তারিখ, পরিমাণ ও কিনা দাম এডিট করুন' : 'Edit Voucher'}
-                            >
-                              <Edit3 size={15} />
-                            </button>
+                            {/* Edit Voucher Info (Admin Only) */}
+                            {isAdmin && (
+                              <button
+                                onClick={() => setEditingVoucher({ ...vouch, items: JSON.parse(JSON.stringify(vouch.items || [])) })}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '0.35rem 0.55rem', color: '#f59e0b' }}
+                                title={isBn ? 'ভাউচারের আইটেম, তারিখ, পরিমাণ ও কিনা দাম এডিট করুন' : 'Edit Voucher'}
+                              >
+                                <Edit3 size={15} />
+                              </button>
+                            )}
 
-                            {/* Delete Voucher & Revert Stock */}
-                            <button
-                              onClick={async () => {
-                                const confirmed = await showConfirm({
-                                  title: isBn ? 'ক্রয় ভাউচার মুছে ফেলা' : 'Delete Purchase Voucher',
-                                  message: isBn ? `আপনি কি নিশ্চিত যে ক্রয় ভাউচার ${vouch.id} মুছে ফেলতে চান? ইনভেন্টরি থেকে পণ্যের স্টক স্বয়ংক্রিয়ভাবে কমে যাবে।` : `Delete purchase voucher ${vouch.id} and revert stock?`,
-                                  type: 'danger',
-                                  confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
-                                });
-                                if (confirmed) {
-                                  deletePurchaseVoucher(vouch.id);
-                                }
-                              }}
-                              className="btn btn-secondary btn-sm"
-                              style={{ padding: '0.35rem 0.55rem', color: '#f43f5e' }}
-                              title={isBn ? 'ভাউচার ডিলিট ও স্টক মাইনাস' : 'Delete Voucher'}
-                            >
-                              <Trash2 size={15} />
-                            </button>
+                            {/* Delete Voucher & Revert Stock (Admin Only) */}
+                            {isAdmin && (
+                              <button
+                                onClick={async () => {
+                                  const confirmed = await showConfirm({
+                                    title: isBn ? 'ক্রয় ভাউচার মুছে ফেলা' : 'Delete Purchase Voucher',
+                                    message: isBn ? `আপনি কি নিশ্চিত যে ক্রয় ভাউচার ${vouch.id} মুছে ফেলতে চান? ইনভেন্টরি থেকে পণ্যের স্টক স্বয়ংক্রিয়ভাবে কমে যাবে।` : `Delete purchase voucher ${vouch.id} and revert stock?`,
+                                    type: 'danger',
+                                    confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                                  });
+                                  if (confirmed) {
+                                    deletePurchaseVoucher(vouch.id);
+                                  }
+                                }}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '0.35rem 0.55rem', color: '#f43f5e' }}
+                                title={isBn ? 'ভাউচার ডিলিট ও স্টক মাইনাস' : 'Delete Voucher'}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

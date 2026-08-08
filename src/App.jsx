@@ -180,7 +180,7 @@ export default function App() {
   }
 
   return (
-    <StoreProvider authToken={authToken} onAuthError={handleLogout}>
+    <StoreProvider authToken={authToken} currentUser={currentUser} onAuthError={handleLogout}>
       <AppContent currentUser={currentUser} onLogout={handleLogout} />
     </StoreProvider>
   );

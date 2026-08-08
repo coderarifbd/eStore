@@ -134,7 +134,7 @@ const SearchableBrandSelect = ({ brands = [], value, onChange, isBn }) => {
 };
 
 export const POS = () => {
-  const { lang, sales, brands, addSale, updateSale, deleteSale, setPrintDoc, showConfirm } = useStore();
+  const { lang, sales, brands, addSale, updateSale, deleteSale, setPrintDoc, showConfirm, isAdmin } = useStore();
   const isBn = lang === 'bn';
 
   // Screen View Switcher: 'pos' (New Sale) vs 'history' (Old Invoices Archive)
@@ -818,35 +818,39 @@ export const POS = () => {
                               <span>{isBn ? 'দেখুন' : 'View'}</span>
                             </button>
 
-                            {/* Edit Invoice Details */}
-                            <button
-                              onClick={() => setEditingSale({ ...sale })}
-                              className="btn btn-secondary btn-sm"
-                              style={{ padding: '0.3rem 0.5rem', color: '#f59e0b' }}
-                              title={isBn ? 'মেমোর কাস্টমার ও জমার তথ্য এডিট করুন' : 'Edit Invoice'}
-                            >
-                              <Edit3 size={15} />
-                            </button>
+                            {/* Edit Invoice (Admin Only) */}
+                            {isAdmin && (
+                              <button
+                                onClick={() => setEditingSale({ ...sale })}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '0.3rem 0.5rem', color: '#f59e0b' }}
+                                title={isBn ? 'মেমোর কাস্টমার ও জমার তথ্য এডিট করুন' : 'Edit Invoice'}
+                              >
+                                <Edit3 size={15} />
+                              </button>
+                            )}
 
-                            {/* Delete Invoice & Refund Stock */}
-                            <button
-                              onClick={async () => {
-                                const confirmed = await showConfirm({
-                                  title: isBn ? 'মেমো মুছে ফেলা' : 'Delete Invoice',
-                                  message: isBn ? `আপনি কি নিশ্চিত যে ক্যাশ মেমো ${sale.id} মুছে ফেলতে চান? পণ্যের স্টক স্বয়ংক্রিয়ভাবে ফেরত যাবে।` : `Delete invoice ${sale.id} and refund stock?`,
-                                  type: 'danger',
-                                  confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
-                                });
-                                if (confirmed) {
-                                  deleteSale(sale.id);
-                                }
-                              }}
-                              className="btn btn-secondary btn-sm"
-                              style={{ padding: '0.3rem 0.5rem', color: '#f43f5e' }}
-                              title={isBn ? 'মেমো ডিলিট ও স্টক ফেরত' : 'Delete Invoice'}
-                            >
-                              <Trash2 size={15} />
-                            </button>
+                            {/* Delete Invoice & Refund Stock (Admin Only) */}
+                            {isAdmin && (
+                              <button
+                                onClick={async () => {
+                                  const confirmed = await showConfirm({
+                                    title: isBn ? 'মেমো মুছে ফেলা' : 'Delete Invoice',
+                                    message: isBn ? `আপনি কি নিশ্চিত যে ক্যাশ মেমো ${sale.id} মুছে ফেলতে চান? পণ্যের স্টক স্বয়ংক্রিয়ভাবে ফেরত যাবে।` : `Delete invoice ${sale.id} and refund stock?`,
+                                    type: 'danger',
+                                    confirmText: isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Delete'
+                                  });
+                                  if (confirmed) {
+                                    deleteSale(sale.id);
+                                  }
+                                }}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '0.3rem 0.5rem', color: '#f43f5e' }}
+                                title={isBn ? 'মেমো ডিলিট ও স্টক ফেরত' : 'Delete Invoice'}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

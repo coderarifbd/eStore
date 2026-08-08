@@ -71,7 +71,8 @@ export const INITIAL_PRESETS = [
   }
 ];
 
-export const StoreProvider = ({ children, authToken, onAuthError }) => {
+export const StoreProvider = ({ children, authToken, currentUser, onAuthError }) => {
+  const isAdmin = currentUser?.role === 'admin';
   const [lang, setLang] = useState(() => localStorage.getItem('elec_lang') || 'bn');
 
   const [products, _setProductsRaw] = useState(() => {
@@ -1142,6 +1143,8 @@ export const StoreProvider = ({ children, authToken, onAuthError }) => {
       clearAllData,
       exportDataJSON,
       importDataJSON,
+      currentUser,
+      isAdmin,
       printDoc, setPrintDoc,
       confirmState, showConfirm, closeConfirm
     }}>
